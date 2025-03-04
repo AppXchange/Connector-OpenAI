@@ -1,0 +1,275 @@
+﻿https://github.com/AppXchange/Connector-OpenAI
+
+
+https://platform.openai.com/docs/api-reference/
+
+
+# Build
+cd desktop/connectors
+mkdir connector-openai
+cd connector-openai
+xchange connector new --name OpenAI
+cd connector
+
+
+______
+
+
+# Auth
+https://docs.nanonets.com/reference/authentication
+xchange client new --type Http --auth-type ApiKey
+
+
+______
+
+
+## Module 1: Endpoints
+xchange module new --id endpoints-1 --name Endpoints --key endpoints --version 1
+
+
+# Audio - https://platform.openai.com/docs/api-reference/audio
+https://platform.openai.com/docs/api-reference/audio/json-object
+xchange data-object new --module-id endpoints-1 --name Transcription
+https://platform.openai.com/docs/api-reference/audio/createTranscription
+xchange action new --module-id endpoints-1 --object-name Transcription --name Create
+xchange data-object new --module-id endpoints-1 --name Speech
+https://platform.openai.com/docs/api-reference/audio/createSpeech
+xchange action new --module-id endpoints-1 --object-name Speech --name Create
+xchange data-object new --module-id endpoints-1 --name Translation
+https://platform.openai.com/docs/api-reference/audio/createTranslation
+xchange action new --module-id endpoints-1 --object-name Translation --name Create
+
+
+# Chat - https://platform.openai.com/docs/api-reference/chat
+https://platform.openai.com/docs/api-reference/chat/get
+xchange data-object new --module-id endpoints-1 --name ChatCompletion
+https://platform.openai.com/docs/api-reference/chat/create
+xchange action new --module-id endpoints-1 --object-name ChatCompletion --name Create
+https://platform.openai.com/docs/api-reference/chat/update
+xchange action new --module-id endpoints-1 --object-name ChatCompletion --name Update
+https://platform.openai.com/docs/api-reference/chat/delete
+xchange action new --module-id endpoints-1 --object-name ChatCompletion --name Delete
+https://platform.openai.com/docs/api-reference/chat/list
+xchange data-object new --module-id endpoints-1 --name ChatCompletionList
+https://platform.openai.com/docs/api-reference/chat/getMessages
+xchange data-object new --module-id endpoints-1 --name ChatMessages
+
+
+
+
+# Embeddings - https://platform.openai.com/docs/api-reference/embeddings
+xchange data-object new --module-id endpoints-1 --name Embeddings
+https://platform.openai.com/docs/api-reference/embeddings/create
+xchange action new --module-id endpoints-1 --object-name Embeddings --name Create
+
+
+# Fine-tuning - https://platform.openai.com/docs/api-reference/fine-tuning
+https://platform.openai.com/docs/api-reference/fine-tuning/retrieve
+xchange data-object new --module-id endpoints-1 --name FineTuningJob
+https://platform.openai.com/docs/api-reference/fine-tuning/create
+xchange action new --module-id endpoints-1 --object-name FineTuningJob --name Create
+https://platform.openai.com/docs/api-reference/fine-tuning/cancel
+xchange action new --module-id endpoints-1 --object-name FineTuningJob --name Cancel
+https://platform.openai.com/docs/api-reference/fine-tuning/list
+xchange data-object new --module-id endpoints-1 --name FineTuningJobs
+https://platform.openai.com/docs/api-reference/fine-tuning/list-events
+xchange data-object new --module-id endpoints-1 --name FineTuningEvents
+https://platform.openai.com/docs/api-reference/fine-tuning/list-checkpoints
+xchange data-object new --module-id endpoints-1 --name FineTuningCheckpoints
+
+
+
+
+# Batch - https://platform.openai.com/docs/api-reference/batch
+https://platform.openai.com/docs/api-reference/batch/list
+xchange data-object new --module-id endpoints-1 --name BatchList
+https://platform.openai.com/docs/api-reference/batch/retrieve
+xchange data-object new --module-id endpoints-1 --name Batch
+https://platform.openai.com/docs/api-reference/batch/create
+xchange action new --module-id endpoints-1 --object-name Batch --name Create
+https://platform.openai.com/docs/api-reference/batch/cancel
+xchange action new --module-id endpoints-1 --object-name Batch --name Cancel
+
+
+
+
+# Files - https://platform.openai.com/docs/api-reference/files
+https://platform.openai.com/docs/api-reference/files/list
+xchange data-object new --module-id endpoints-1 --name FileList
+https://platform.openai.com/docs/api-reference/files/retrieve
+xchange data-object new --module-id endpoints-1 --name File
+https://platform.openai.com/docs/api-reference/files/create
+xchange action new --module-id endpoints-1 --object-name File --name Upload
+https://platform.openai.com/docs/api-reference/files/delete
+xchange action new --module-id endpoints-1 --object-name File --name Delete
+https://platform.openai.com/docs/api-reference/files/retrieve-contents
+xchange data-object new --module-id endpoints-1 --name FileContent
+
+
+
+
+# Uploads - https://platform.openai.com/docs/api-reference/uploads
+https://platform.openai.com/docs/api-reference/uploads/object
+xchange data-object new --module-id endpoints-1 --name Upload
+https://platform.openai.com/docs/api-reference/uploads/create
+xchange action new --module-id endpoints-1 --object-name Upload --name Create
+https://platform.openai.com/docs/api-reference/uploads/add-part
+xchange action new --module-id endpoints-1 --object-name Upload --name AddPart
+https://platform.openai.com/docs/api-reference/uploads/complete
+xchange action new --module-id endpoints-1 --object-name Upload --name Complete
+https://platform.openai.com/docs/api-reference/uploads/cancel
+xchange action new --module-id endpoints-1 --object-name Upload --name Cancel
+
+
+
+
+# Images - https://platform.openai.com/docs/api-reference/images
+https://platform.openai.com/docs/api-reference/images/object
+xchange data-object new --module-id endpoints-1 --name Image
+https://platform.openai.com/docs/api-reference/images/create
+xchange action new --module-id endpoints-1 --object-name Image --name Create
+https://platform.openai.com/docs/api-reference/images/createEdit
+xchange action new --module-id endpoints-1 --object-name Image --name CreateEdit
+https://platform.openai.com/docs/api-reference/images/createVariation
+xchange action new --module-id endpoints-1 --object-name Image --name CreateVariation
+
+
+# Models - https://platform.openai.com/docs/api-reference/models
+https://platform.openai.com/docs/api-reference/models/retrieve
+xchange data-object new --module-id endpoints-1 --name Model
+https://platform.openai.com/docs/api-reference/models/list
+xchange data-object new --module-id endpoints-1 --name ModelList
+https://platform.openai.com/docs/api-reference/models/delete
+xchange action new --module-id endpoints-1 --object-name Model --name Delete
+
+
+
+
+# Moderations - https://platform.openai.com/docs/api-reference/moderations
+xchange data-object new --module-id endpoints-1 --name Moderation
+https://platform.openai.com/docs/api-reference/moderations/create
+xchange action new --module-id endpoints-1 --object-name Moderation --name Create
+
+
+
+
+
+
+
+
+_______
+
+
+## Module 2: Assistants
+xchange module new --id assistants-1 --name Assistants --key assistants --version 1
+
+
+# Assistants - https://platform.openai.com/docs/api-reference/assistants
+https://platform.openai.com/docs/api-reference/assistants/getAssistant
+xchange data-object new --module-id assistants-1 --name Assistant
+https://platform.openai.com/docs/api-reference/assistants/createAssistant
+xchange action new --module-id assistants-1 --object-name Assistant --name Create
+https://platform.openai.com/docs/api-reference/assistants/modifyAssistant
+xchange action new --module-id assistants-1 --object-name Assistant --name Modify
+https://platform.openai.com/docs/api-reference/assistants/deleteAssistant
+xchange action new --module-id assistants-1 --object-name Assistant --name Delete
+https://platform.openai.com/docs/api-reference/assistants/listAssistants
+xchange data-object new --module-id assistants-1 --name ListAssistants
+
+
+# Threads - https://platform.openai.com/docs/api-reference/threads
+https://platform.openai.com/docs/api-reference/threads/getThread
+xchange data-object new --module-id assistants-1 --name Thread
+https://platform.openai.com/docs/api-reference/threads/createThread
+xchange action new --module-id assistants-1 --object-name Thread --name Create
+https://platform.openai.com/docs/api-reference/threads/modifyThread
+xchange action new --module-id assistants-1 --object-name Thread --name Modify
+https://platform.openai.com/docs/api-reference/threads/deleteThread
+xchange action new --module-id assistants-1 --object-name Thread --name Delete
+
+
+
+
+# Messages - https://platform.openai.com/docs/api-reference/messages
+https://platform.openai.com/docs/api-reference/messages/listMessages
+xchange data-object new --module-id assistants-1 --name ListMessages
+https://platform.openai.com/docs/api-reference/messages/getMessage
+xchange data-object new --module-id assistants-1 --name Message
+https://platform.openai.com/docs/api-reference/messages/createMessage
+xchange action new --module-id assistants-1 --object-name Message --name Create
+https://platform.openai.com/docs/api-reference/messages/modifyMessage
+xchange action new --module-id assistants-1 --object-name Message --name Modify
+https://platform.openai.com/docs/api-reference/messages/deleteMessage
+xchange action new --module-id assistants-1 --object-name Message --name Delete
+
+
+
+
+# Runs - https://platform.openai.com/docs/api-reference/runs
+https://platform.openai.com/docs/api-reference/runs/getRun
+xchange data-object new --module-id assistants-1 --name Run
+https://platform.openai.com/docs/api-reference/runs/createRun
+xchange action new --module-id assistants-1 --object-name Run --name Create
+https://platform.openai.com/docs/api-reference/runs/modifyRun
+xchange action new --module-id assistants-1 --object-name Run --name Modify
+https://platform.openai.com/docs/api-reference/runs/cancelRun
+xchange action new --module-id assistants-1 --object-name Run --name Cancel
+https://platform.openai.com/docs/api-reference/runs/createThreadAndRun
+xchange action new --module-id assistants-1 --object-name Run --name CreateThread
+https://platform.openai.com/docs/api-reference/runs/listRuns
+xchange data-object new --module-id assistants-1 --name ListRuns
+
+
+
+
+# Run Steps
+https://platform.openai.com/docs/api-reference/run-steps/listRunSteps
+xchange data-object new --module-id assistants-1 --name ListRunSteps
+https://platform.openai.com/docs/api-reference/run-steps/getRunStep
+xchange data-object new --module-id assistants-1 --name RunStep
+
+
+
+
+# Vector Stores
+https://platform.openai.com/docs/api-reference/vector-stores/list
+xchange data-object new --module-id assistants-1 --name ListVectorStores
+https://platform.openai.com/docs/api-reference/vector-stores/retrieve
+xchange data-object new --module-id assistants-1 --name VectorStore
+https://platform.openai.com/docs/api-reference/vector-stores/create
+xchange action new --module-id assistants-1 --object-name VectorStore --name Create
+https://platform.openai.com/docs/api-reference/vector-stores/modify
+xchange action new --module-id assistants-1 --object-name VectorStore --name Modify
+https://platform.openai.com/docs/api-reference/vector-stores/delete
+xchange action new --module-id assistants-1 --object-name VectorStore --name Delete
+
+
+
+
+# Vector Store Files
+https://platform.openai.com/docs/api-reference/vector-stores-files/listFiles
+xchange data-object new --module-id assistants-1 --name ListVectorStoreFiles
+https://platform.openai.com/docs/api-reference/vector-stores-files/getFile
+xchange data-object new --module-id assistants-1 --name VectorStoreFile
+https://platform.openai.com/docs/api-reference/vector-stores-files/createFile
+xchange action new --module-id assistants-1 --object-name VectorStoreFile --name Create
+https://platform.openai.com/docs/api-reference/vector-stores-files/deleteFile
+xchange action new --module-id assistants-1 --object-name VectorStoreFile --name Delete
+
+
+
+
+# Vector Store File Batches
+https://platform.openai.com/docs/api-reference/vector-stores-file-batches/listBatchFiles
+xchange data-object new --module-id assistants-1 --name ListVectorStoreFilesInBatch
+https://platform.openai.com/docs/api-reference/vector-stores-file-batches/getBatch
+xchange data-object new --module-id assistants-1 --name VectorStoreFileInBatch
+https://platform.openai.com/docs/api-reference/vector-stores-file-batches/createBatch
+xchange action new --module-id assistants-1 --object-name VectorStoreFileInBatch --name Create
+https://platform.openai.com/docs/api-reference/vector-stores-file-batches/cancelBatch
+xchange action new --module-id assistants-1 --object-name VectorStoreFileInBatch --name Cancel
+
+
+
+
+_______

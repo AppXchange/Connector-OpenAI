@@ -1,0 +1,24 @@
+{
+  "name": "OpenAI",
+  "urlPart": "open-ai",
+  "key": "open-ai",
+  "description": "",
+  "modules": [
+    {
+      "id": "endpoints-1",
+      "name": "Endpoints",
+      "urlPart": "endpoints",
+      "key": "endpoints",
+      "description": "",
+      "version": 1
+    },
+    {
+      "id": "assistants-1",
+      "name": "Assistants",
+      "urlPart": "assistants",
+      "key": "assistants",
+      "description": "",
+      "version": 1
+    }
+  ]
+}
