@@ -14,11 +14,16 @@ using Xchange.Connector.SDK.Action;
 /// are properly formed. The schema also helps provide integrators more information for what the values 
 /// are intended to be.
 /// </summary>
-[Description("DeleteChatCompletionAction Action description goes here")]
+[Description("Deletes a stored chat completion from OpenAI's API")]
 public class DeleteChatCompletionAction : IStandardAction<DeleteChatCompletionActionInput, DeleteChatCompletionActionOutput>
 {
-    public DeleteChatCompletionActionInput ActionInput { get; set; } = new();
-    public DeleteChatCompletionActionOutput ActionOutput { get; set; } = new();
+    public DeleteChatCompletionActionInput ActionInput { get; set; } = new() { CompletionId = string.Empty };
+    public DeleteChatCompletionActionOutput ActionOutput { get; set; } = new() 
+    { 
+        Object = "chat.completion.deleted",
+        Id = string.Empty,
+        Deleted = false
+    };
     public StandardActionFailure ActionFailure { get; set; } = new();
 
     public bool CreateRtap => true;
@@ -26,11 +31,26 @@ public class DeleteChatCompletionAction : IStandardAction<DeleteChatCompletionAc
 
 public class DeleteChatCompletionActionInput
 {
-
+    [JsonPropertyName("completion_id")]
+    [Description("The ID of the chat completion to delete")]
+    [Required]
+    public required string CompletionId { get; init; }
 }
 
 public class DeleteChatCompletionActionOutput
 {
+    [JsonPropertyName("object")]
+    [Description("The object type, which is always chat.completion.deleted")]
+    [Required]
+    public required string Object { get; init; }
+
     [JsonPropertyName("id")]
-    public Guid Id { get; set; }
+    [Description("The ID of the deleted chat completion")]
+    [Required]
+    public required string Id { get; init; }
+
+    [JsonPropertyName("deleted")]
+    [Description("Whether the chat completion was successfully deleted")]
+    [Required]
+    public required bool Deleted { get; init; }
 }

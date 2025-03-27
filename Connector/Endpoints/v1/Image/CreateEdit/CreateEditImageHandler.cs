@@ -1,4 +1,5 @@
 using Connector.Client;
+using Connector.Endpoints.v1.Image;
 using ESR.Hosting.Action;
 using ESR.Hosting.CacheWriter;
 using Microsoft.Extensions.Logging;
@@ -16,42 +17,73 @@ namespace Connector.Endpoints.v1.Image.CreateEdit;
 public class CreateEditImageHandler : IActionHandler<CreateEditImageAction>
 {
     private readonly ILogger<CreateEditImageHandler> _logger;
+    private readonly ApiClient _apiClient;
 
     public CreateEditImageHandler(
-        ILogger<CreateEditImageHandler> logger)
+        ILogger<CreateEditImageHandler> logger,
+        ApiClient apiClient)
     {
         _logger = logger;
+        _apiClient = apiClient;
     }
     
     public async Task<ActionHandlerOutcome> HandleQueuedActionAsync(ActionInstance actionInstance, CancellationToken cancellationToken)
     {
         var input = JsonSerializer.Deserialize<CreateEditImageActionInput>(actionInstance.InputJson);
+        if (input == null)
+        {
+            _logger.LogError("Failed to deserialize input");
+            return ActionHandlerOutcome.Failed(new StandardActionFailure
+            {
+                Code = "400",
+                Errors = new[]
+                {
+                    new Xchange.Connector.SDK.Action.Error
+                    {
+                        Source = new[] { "CreateEditImageHandler" },
+                        Text = "Failed to deserialize input"
+                    }
+                }
+            });
+        }
+
         try
         {
-            // Given the input for the action, make a call to your API/system
-            var response = new ApiResponse<CreateEditImageActionOutput>();
-            // response = await _apiClient.PostImageDataObject(input, cancellationToken)
-            // .ConfigureAwait(false);
+            var response = await _apiClient.CreateEditImage(input, cancellationToken)
+                .ConfigureAwait(false);
 
-            // The full record is needed for SyncOperations. If the endpoint used for the action returns a partial record (such as only returning the ID) then you can either:
-            // - Make a GET call using the ID that was returned
-            // - Add the ID property to your action input (Assuming this results in the proper data object shape)
+            if (!response.IsSuccessful || response.Data == null)
+            {
+                _logger.LogError("Failed to create edited image. Status code: {StatusCode}", response.StatusCode);
+                return ActionHandlerOutcome.Failed(new StandardActionFailure
+                {
+                    Code = response.StatusCode.ToString(),
+                    Errors = new[]
+                    {
+                        new Xchange.Connector.SDK.Action.Error
+                        {
+                            Source = new[] { "CreateEditImageHandler" },
+                            Text = "Failed to create edited image"
+                        }
+                    }
+                });
+            }
 
-            // var resource = await _apiClient.GetImageDataObject(response.Data.id, cancellationToken);
-
-            // var resource = new CreateEditImageActionOutput
-            // {
-            //      TODO : map
-            // };
-
-            // If the response is already the output object for the action, you can use the response directly
-
-            // Build sync operations to update the local cache as well as the Xchange cache system (if the data type is cached)
-            // For more information on SyncOperations and the KeyResolver, check: https://trimble-xchange.github.io/connector-docs/guides/creating-actions/#keyresolver-and-the-sync-cache-operations
             var operations = new List<SyncOperation>();
-            var keyResolver = new DefaultDataObjectKey();
-            var key = keyResolver.BuildKeyResolver()(response.Data);
-            operations.Add(SyncOperation.CreateSyncOperation(UpdateOperation.Upsert.ToString(), key.UrlPart, key.PropertyNames, response.Data));
+            foreach (var imageData in response.Data.Data)
+            {
+                var imageObject = new ImageDataObject
+                {
+                    Id = System.Guid.NewGuid().ToString(),
+                    Url = imageData.Url,
+                    B64Json = imageData.B64Json,
+                    CreatedAt = response.Data.Created
+                };
+
+                var keyResolver = new DefaultDataObjectKey();
+                var key = keyResolver.BuildKeyResolver()(imageObject);
+                operations.Add(SyncOperation.CreateSyncOperation(UpdateOperation.Upsert.ToString(), key.UrlPart, key.PropertyNames, imageObject));
+            }
 
             var resultList = new List<CacheSyncCollection>
             {
@@ -62,10 +94,6 @@ public class CreateEditImageHandler : IActionHandler<CreateEditImageAction>
         }
         catch (HttpRequestException exception)
         {
-            // If an error occurs, we want to create a failure result for the action that matches
-            // the failure type for the action. 
-            // Common to create extension methods to map to Standard Action Failure
-
             var errorSource = new List<string> { "CreateEditImageHandler" };
             if (string.IsNullOrEmpty(exception.Source)) errorSource.Add(exception.Source!);
             

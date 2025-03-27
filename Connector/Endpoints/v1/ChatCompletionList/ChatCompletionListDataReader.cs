@@ -14,31 +14,25 @@ namespace Connector.Endpoints.v1.ChatCompletionList;
 public class ChatCompletionListDataReader : TypedAsyncDataReaderBase<ChatCompletionListDataObject>
 {
     private readonly ILogger<ChatCompletionListDataReader> _logger;
-    private int _currentPage = 0;
+    private readonly ApiClient _apiClient;
+    private string? _lastId;
 
     public ChatCompletionListDataReader(
-        ILogger<ChatCompletionListDataReader> logger)
+        ILogger<ChatCompletionListDataReader> logger,
+        ApiClient apiClient)
     {
         _logger = logger;
+        _apiClient = apiClient;
     }
 
-    public override async IAsyncEnumerable<ChatCompletionListDataObject> GetTypedDataAsync(DataObjectCacheWriteArguments ? dataObjectRunArguments, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public override async IAsyncEnumerable<ChatCompletionListDataObject> GetTypedDataAsync(DataObjectCacheWriteArguments? dataObjectRunArguments, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         while (true)
         {
-            var response = new ApiResponse<PaginatedResponse<ChatCompletionListDataObject>>();
-            // If the ChatCompletionListDataObject does not have the same structure as the ChatCompletionList response from the API, create a new class for it and replace ChatCompletionListDataObject with it.
-            // Example:
-            // var response = new ApiResponse<IEnumerable<ChatCompletionListResponse>>();
-
-            // Make a call to your API/system to retrieve the objects/type for the connector's configuration.
+            ApiResponse<ChatCompletionListDataObject> response;
             try
             {
-                //response = await _apiClient.GetRecords<ChatCompletionListDataObject>(
-                //    relativeUrl: "chatCompletionLists",
-                //    page: _currentPage,
-                //    cancellationToken: cancellationToken)
-                //    .ConfigureAwait(false);
+                response = await _apiClient.GetChatCompletionList(_lastId, cancellationToken);
             }
             catch (HttpRequestException exception)
             {
@@ -48,31 +42,22 @@ public class ChatCompletionListDataReader : TypedAsyncDataReaderBase<ChatComplet
 
             if (!response.IsSuccessful)
             {
-                throw new Exception($"Failed to retrieve records for 'ChatCompletionListDataObject'. API StatusCode: {response.StatusCode}");
+                throw new Exception($"Failed to retrieve chat completion list. API StatusCode: {response.StatusCode}");
             }
 
-            if (response.Data == null || !response.Data.Items.Any()) break;
-
-            // Return the data objects to Cache.
-            foreach (var item in response.Data.Items)
-            {
-                // If new class was created to match the API response, create a new ChatCompletionListDataObject object, map the properties and return a ChatCompletionListDataObject.
-
-                // Example:
-                //var resource = new ChatCompletionListDataObject
-                //{
-                //// TODO: Map properties.      
-                //};
-                //yield return resource;
-                yield return item;
-            }
-
-            // Handle pagination per API client design
-            _currentPage++;
-            if (_currentPage >= response.Data.TotalPages)
+            if (response.Data == null)
             {
                 break;
             }
+
+            yield return response.Data;
+
+            if (!response.Data.HasMore)
+            {
+                break;
+            }
+
+            _lastId = response.Data.LastId;
         }
     }
 }

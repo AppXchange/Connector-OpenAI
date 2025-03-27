@@ -14,11 +14,39 @@ using Xchange.Connector.SDK.CacheWriter;
 /// </summary>
 [PrimaryKey("id", nameof(Id))]
 //[AlternateKey("alt-key-id", nameof(CompanyId), nameof(EquipmentNumber))]
-[Description("Example description of the object.")]
+[Description("Represents a speech response from OpenAI's API")]
 public class SpeechDataObject
 {
     [JsonPropertyName("id")]
-    [Description("Example primary key of the object")]
+    [Description("Unique identifier for the speech")]
     [Required]
     public required Guid Id { get; init; }
+
+    [JsonPropertyName("audio")]
+    [Description("The generated audio content")]
+    [Required]
+    public required byte[] Audio { get; init; }
+
+    [JsonPropertyName("model")]
+    [Description("The model used to generate the speech")]
+    [Required]
+    public required string Model { get; init; }
+
+    [JsonPropertyName("voice")]
+    [Description("The voice used to generate the speech")]
+    [Required]
+    public required string Voice { get; init; }
+
+    [JsonPropertyName("input")]
+    [Description("The input text that was converted to speech")]
+    [Required]
+    public required string Input { get; init; }
+
+    [JsonPropertyName("response_format")]
+    [Description("The format of the audio output")]
+    public string? ResponseFormat { get; init; }
+
+    [JsonPropertyName("speed")]
+    [Description("The speed of the generated audio")]
+    public double? Speed { get; init; }
 }

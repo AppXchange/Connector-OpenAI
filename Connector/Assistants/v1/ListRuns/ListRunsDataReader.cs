@@ -11,68 +11,92 @@ using System.Net.Http;
 
 namespace Connector.Assistants.v1.ListRuns;
 
+internal static class DataObjectExtensions
+{
+    public static bool TryGetParameterValue<T>(this DataObjectCacheWriteArguments args, string key, out T? value)
+    {
+        value = default;
+        if (args == null) return false;
+
+        var dict = args.GetType().GetProperty("Arguments")?.GetValue(args) as IDictionary<string, object>;
+        if (dict == null || !dict.ContainsKey(key)) return false;
+
+        try
+        {
+            value = (T)dict[key];
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+}
+
 public class ListRunsDataReader : TypedAsyncDataReaderBase<ListRunsDataObject>
 {
     private readonly ILogger<ListRunsDataReader> _logger;
-    private int _currentPage = 0;
+    private readonly ApiClient _apiClient;
+    private string? _lastId;
 
     public ListRunsDataReader(
-        ILogger<ListRunsDataReader> logger)
+        ILogger<ListRunsDataReader> logger,
+        ApiClient apiClient)
     {
         _logger = logger;
+        _apiClient = apiClient;
     }
 
-    public override async IAsyncEnumerable<ListRunsDataObject> GetTypedDataAsync(DataObjectCacheWriteArguments ? dataObjectRunArguments, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public override async IAsyncEnumerable<ListRunsDataObject> GetTypedDataAsync(
+        DataObjectCacheWriteArguments? dataObjectRunArguments,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        while (true)
+        if (dataObjectRunArguments == null)
         {
-            var response = new ApiResponse<PaginatedResponse<ListRunsDataObject>>();
-            // If the ListRunsDataObject does not have the same structure as the ListRuns response from the API, create a new class for it and replace ListRunsDataObject with it.
-            // Example:
-            // var response = new ApiResponse<IEnumerable<ListRunsResponse>>();
+            throw new ArgumentException("DataObjectCacheWriteArguments is required");
+        }
 
-            // Make a call to your API/system to retrieve the objects/type for the connector's configuration.
-            try
+        if (!dataObjectRunArguments.TryGetParameterValue("thread_id", out string? threadId) || string.IsNullOrEmpty(threadId))
+        {
+            throw new ArgumentException("Thread ID is required");
+        }
+
+        ApiResponse<ListRunsDataObject>? response = null;
+        try
+        {
+            while (true)
             {
-                //response = await _apiClient.GetRecords<ListRunsDataObject>(
-                //    relativeUrl: "listRuns",
-                //    page: _currentPage,
-                //    cancellationToken: cancellationToken)
-                //    .ConfigureAwait(false);
-            }
-            catch (HttpRequestException exception)
-            {
-                _logger.LogError(exception, "Exception while making a read request to data object 'ListRunsDataObject'");
-                throw;
-            }
+                response = await _apiClient.ListRuns(
+                    threadId: threadId,
+                    after: _lastId,
+                    before: null,
+                    limit: 20,
+                    order: "desc",
+                    cancellationToken: cancellationToken)
+                    .ConfigureAwait(false);
 
-            if (!response.IsSuccessful)
-            {
-                throw new Exception($"Failed to retrieve records for 'ListRunsDataObject'. API StatusCode: {response.StatusCode}");
+                if (!response.IsSuccessful || response.Data == null)
+                {
+                    throw new HttpRequestException($"Failed to retrieve runs. Status code: {response.StatusCode}");
+                }
+
+                if (!response.Data.HasMore)
+                {
+                    break;
+                }
+
+                _lastId = response.Data.LastId;
             }
+        }
+        catch (HttpRequestException exception)
+        {
+            _logger.LogError(exception, "Exception while making a read request to data object 'ListRunsDataObject'");
+            throw;
+        }
 
-            if (response.Data == null || !response.Data.Items.Any()) break;
-
-            // Return the data objects to Cache.
-            foreach (var item in response.Data.Items)
-            {
-                // If new class was created to match the API response, create a new ListRunsDataObject object, map the properties and return a ListRunsDataObject.
-
-                // Example:
-                //var resource = new ListRunsDataObject
-                //{
-                //// TODO: Map properties.      
-                //};
-                //yield return resource;
-                yield return item;
-            }
-
-            // Handle pagination per API client design
-            _currentPage++;
-            if (_currentPage >= response.Data.TotalPages)
-            {
-                break;
-            }
+        if (response?.Data != null)
+        {
+            yield return response.Data;
         }
     }
 }

@@ -6,19 +6,22 @@ using System.Text.Json.Serialization;
 using Xchange.Connector.SDK.Action;
 
 /// <summary>
-/// Action object that will represent an action in the Xchange system. This will contain an input object type,
-/// an output object type, and a Action failure type (this will default to <see cref="StandardActionFailure"/>
-/// but that can be overridden with your own preferred type). These objects will be converted to a JsonSchema, 
-/// so add attributes to the properties to provide any descriptions, titles, ranges, max, min, etc... 
-/// These types will be used for validation at runtime to make sure the objects being passed through the system 
-/// are properly formed. The schema also helps provide integrators more information for what the values 
-/// are intended to be.
+/// Action to delete a message from a thread.
 /// </summary>
-[Description("DeleteMessageAction Action description goes here")]
+[Description("Deletes a message from a thread")]
 public class DeleteMessageAction : IStandardAction<DeleteMessageActionInput, DeleteMessageActionOutput>
 {
-    public DeleteMessageActionInput ActionInput { get; set; } = new();
-    public DeleteMessageActionOutput ActionOutput { get; set; } = new();
+    public DeleteMessageActionInput ActionInput { get; set; } = new() 
+    { 
+        ThreadId = string.Empty,
+        MessageId = string.Empty
+    };
+    public DeleteMessageActionOutput ActionOutput { get; set; } = new() 
+    { 
+        Id = string.Empty,
+        Object = "thread.message.deleted",
+        Deleted = false
+    };
     public StandardActionFailure ActionFailure { get; set; } = new();
 
     public bool CreateRtap => true;
@@ -26,11 +29,31 @@ public class DeleteMessageAction : IStandardAction<DeleteMessageActionInput, Del
 
 public class DeleteMessageActionInput
 {
+    [JsonPropertyName("thread_id")]
+    [Description("The ID of the thread containing the message")]
+    [Required]
+    public required string ThreadId { get; set; }
 
+    [JsonPropertyName("message_id")]
+    [Description("The ID of the message to delete")]
+    [Required]
+    public required string MessageId { get; set; }
 }
 
 public class DeleteMessageActionOutput
 {
     [JsonPropertyName("id")]
-    public Guid Id { get; set; }
+    [Description("The ID of the deleted message")]
+    [Required]
+    public required string Id { get; set; }
+
+    [JsonPropertyName("object")]
+    [Description("The object type, which is always 'thread.message.deleted'")]
+    [Required]
+    public required string Object { get; set; }
+
+    [JsonPropertyName("deleted")]
+    [Description("Whether the message was successfully deleted")]
+    [Required]
+    public required bool Deleted { get; set; }
 }

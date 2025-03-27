@@ -4,13 +4,19 @@ using Xchange.Connector.SDK.Client.ConnectionDefinitions.Attributes;
 
 namespace Connector.Connections;
 
-[ConnectionDefinition(title: "ApiKeyAuth", description: "")]
+[ConnectionDefinition(title: "OpenAI API Key Auth", description: "Authentication for OpenAI API using API key")]
 public class ApiKeyAuth : IApiKeyAuth
 {
-    [ConnectionProperty(title: "ApiKey", description: "", isRequired: true, isSensitive: true)]
+    [ConnectionProperty(title: "API Key", description: "Your OpenAI API key", isRequired: true, isSensitive: true)]
     public string ApiKey { get; init; } = string.Empty;
 
-    [ConnectionProperty(title: "Connection Environment", description: "", isRequired: true, isSensitive: false)]
+    [ConnectionProperty(title: "Organization ID", description: "Your OpenAI Organization ID (optional)", isRequired: false, isSensitive: false)]
+    public string? OrganizationId { get; init; }
+
+    [ConnectionProperty(title: "Project ID", description: "Your OpenAI Project ID (optional)", isRequired: false, isSensitive: false)]
+    public string? ProjectId { get; init; }
+
+    [ConnectionProperty(title: "Connection Environment", description: "The environment to connect to", isRequired: true, isSensitive: false)]
     public ConnectionEnvironmentApiKeyAuth ConnectionEnvironment { get; set; } = ConnectionEnvironmentApiKeyAuth.Unknown;
 
     public string BaseUrl
@@ -20,9 +26,9 @@ public class ApiKeyAuth : IApiKeyAuth
             switch (ConnectionEnvironment)
             {
                 case ConnectionEnvironmentApiKeyAuth.Production:
-                    return "http://prod.example.com";
+                    return "https://api.openai.com/v1";
                 case ConnectionEnvironmentApiKeyAuth.Test:
-                    return "http://test.example.com";
+                    return "https://api.openai.com/v1";
                 default:
                     throw new Exception("No base url was set.");
             }

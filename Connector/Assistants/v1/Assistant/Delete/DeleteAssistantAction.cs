@@ -6,19 +6,18 @@ using System.Text.Json.Serialization;
 using Xchange.Connector.SDK.Action;
 
 /// <summary>
-/// Action object that will represent an action in the Xchange system. This will contain an input object type,
-/// an output object type, and a Action failure type (this will default to <see cref="StandardActionFailure"/>
-/// but that can be overridden with your own preferred type). These objects will be converted to a JsonSchema, 
-/// so add attributes to the properties to provide any descriptions, titles, ranges, max, min, etc... 
-/// These types will be used for validation at runtime to make sure the objects being passed through the system 
-/// are properly formed. The schema also helps provide integrators more information for what the values 
-/// are intended to be.
+/// Action to delete an OpenAI Assistant.
 /// </summary>
-[Description("DeleteAssistantAction Action description goes here")]
+[Description("Deletes an OpenAI Assistant by its ID")]
 public class DeleteAssistantAction : IStandardAction<DeleteAssistantActionInput, DeleteAssistantActionOutput>
 {
-    public DeleteAssistantActionInput ActionInput { get; set; } = new();
-    public DeleteAssistantActionOutput ActionOutput { get; set; } = new();
+    public DeleteAssistantActionInput ActionInput { get; set; } = new() { AssistantId = string.Empty };
+    public DeleteAssistantActionOutput ActionOutput { get; set; } = new() 
+    { 
+        Id = string.Empty,
+        Object = "assistant.deleted",
+        Deleted = false
+    };
     public StandardActionFailure ActionFailure { get; set; } = new();
 
     public bool CreateRtap => true;
@@ -26,11 +25,26 @@ public class DeleteAssistantAction : IStandardAction<DeleteAssistantActionInput,
 
 public class DeleteAssistantActionInput
 {
-
+    [JsonPropertyName("assistant_id")]
+    [Description("The ID of the assistant to delete")]
+    [Required]
+    public required string AssistantId { get; set; }
 }
 
 public class DeleteAssistantActionOutput
 {
     [JsonPropertyName("id")]
-    public Guid Id { get; set; }
+    [Description("The ID of the deleted assistant")]
+    [Required]
+    public required string Id { get; set; }
+
+    [JsonPropertyName("object")]
+    [Description("The object type, which is always 'assistant.deleted'")]
+    [Required]
+    public required string Object { get; set; }
+
+    [JsonPropertyName("deleted")]
+    [Description("Whether the assistant was successfully deleted")]
+    [Required]
+    public required bool Deleted { get; set; }
 }

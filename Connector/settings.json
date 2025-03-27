@@ -1,7 +1,7 @@
 {
   "name": "OpenAI",
-  "urlPart": "open-ai",
-  "key": "open-ai",
+  "urlPart": "trimble-sales-openai",
+  "key": "trimble-sales-openai",
   "description": "",
   "modules": [
     {

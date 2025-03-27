@@ -14,31 +14,33 @@ namespace Connector.Assistants.v1.ListAssistants;
 public class ListAssistantsDataReader : TypedAsyncDataReaderBase<ListAssistantsDataObject>
 {
     private readonly ILogger<ListAssistantsDataReader> _logger;
-    private int _currentPage = 0;
+    private readonly ApiClient _apiClient;
+    private string? _lastId;
 
     public ListAssistantsDataReader(
-        ILogger<ListAssistantsDataReader> logger)
+        ILogger<ListAssistantsDataReader> logger,
+        ApiClient apiClient)
     {
         _logger = logger;
+        _apiClient = apiClient;
     }
 
-    public override async IAsyncEnumerable<ListAssistantsDataObject> GetTypedDataAsync(DataObjectCacheWriteArguments ? dataObjectRunArguments, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public override async IAsyncEnumerable<ListAssistantsDataObject> GetTypedDataAsync(
+        DataObjectCacheWriteArguments? dataObjectRunArguments, 
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        while (true)
+        var hasMore = true;
+        while (hasMore)
         {
-            var response = new ApiResponse<PaginatedResponse<ListAssistantsDataObject>>();
-            // If the ListAssistantsDataObject does not have the same structure as the ListAssistants response from the API, create a new class for it and replace ListAssistantsDataObject with it.
-            // Example:
-            // var response = new ApiResponse<IEnumerable<ListAssistantsResponse>>();
-
-            // Make a call to your API/system to retrieve the objects/type for the connector's configuration.
+            ApiResponse<ListAssistantsDataObject> response;
             try
             {
-                //response = await _apiClient.GetRecords<ListAssistantsDataObject>(
-                //    relativeUrl: "listAssistants",
-                //    page: _currentPage,
-                //    cancellationToken: cancellationToken)
-                //    .ConfigureAwait(false);
+                response = await _apiClient.ListAssistants(
+                    after: _lastId,
+                    limit: 20,
+                    order: "desc",
+                    cancellationToken: cancellationToken)
+                    .ConfigureAwait(false);
             }
             catch (HttpRequestException exception)
             {
@@ -46,32 +48,17 @@ public class ListAssistantsDataReader : TypedAsyncDataReaderBase<ListAssistantsD
                 throw;
             }
 
-            if (!response.IsSuccessful)
+            if (!response.IsSuccessful || response.Data == null)
             {
-                throw new Exception($"Failed to retrieve records for 'ListAssistantsDataObject'. API StatusCode: {response.StatusCode}");
+                throw new HttpRequestException($"Failed to retrieve assistants. Status code: {response.StatusCode}");
             }
 
-            if (response.Data == null || !response.Data.Items.Any()) break;
+            yield return response.Data;
 
-            // Return the data objects to Cache.
-            foreach (var item in response.Data.Items)
+            hasMore = response.Data.HasMore;
+            if (hasMore)
             {
-                // If new class was created to match the API response, create a new ListAssistantsDataObject object, map the properties and return a ListAssistantsDataObject.
-
-                // Example:
-                //var resource = new ListAssistantsDataObject
-                //{
-                //// TODO: Map properties.      
-                //};
-                //yield return resource;
-                yield return item;
-            }
-
-            // Handle pagination per API client design
-            _currentPage++;
-            if (_currentPage >= response.Data.TotalPages)
-            {
-                break;
+                _lastId = response.Data.LastId;
             }
         }
     }

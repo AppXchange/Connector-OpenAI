@@ -3,7 +3,6 @@ using System;
 using ESR.Hosting.CacheWriter;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Xchange.Connector.SDK.CacheWriter;
@@ -11,34 +10,83 @@ using System.Net.Http;
 
 namespace Connector.Assistants.v1.ListVectorStores;
 
+internal static class DataObjectExtensions
+{
+    public static bool TryGetParameterValue<T>(this DataObjectCacheWriteArguments args, string key, out T? value)
+    {
+        value = default;
+        if (args == null) return false;
+
+        var dict = args.GetType().GetProperty("Arguments")?.GetValue(args) as IDictionary<string, object>;
+        if (dict == null || !dict.ContainsKey(key)) return false;
+
+        try
+        {
+            value = (T)dict[key];
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+}
+
 public class ListVectorStoresDataReader : TypedAsyncDataReaderBase<ListVectorStoresDataObject>
 {
     private readonly ILogger<ListVectorStoresDataReader> _logger;
-    private int _currentPage = 0;
+    private readonly ApiClient _apiClient;
+    private string? _lastId;
 
     public ListVectorStoresDataReader(
-        ILogger<ListVectorStoresDataReader> logger)
+        ILogger<ListVectorStoresDataReader> logger,
+        ApiClient apiClient)
     {
         _logger = logger;
+        _apiClient = apiClient;
     }
 
-    public override async IAsyncEnumerable<ListVectorStoresDataObject> GetTypedDataAsync(DataObjectCacheWriteArguments ? dataObjectRunArguments, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public override async IAsyncEnumerable<ListVectorStoresDataObject> GetTypedDataAsync(
+        DataObjectCacheWriteArguments? dataObjectRunArguments,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
+        if (dataObjectRunArguments == null)
+        {
+            throw new ArgumentException("DataObjectCacheWriteArguments is required");
+        }
+
+        int limit = 20;
+        if (dataObjectRunArguments.TryGetParameterValue("limit", out int customLimit) && customLimit > 0 && customLimit <= 100)
+        {
+            limit = customLimit;
+        }
+
+        string order = "desc";
+        if (dataObjectRunArguments.TryGetParameterValue("order", out string? customOrder) && 
+            (customOrder == "asc" || customOrder == "desc"))
+        {
+            order = customOrder;
+        }
+
+        ListVectorStoresDataObject? response = null;
+
         while (true)
         {
-            var response = new ApiResponse<PaginatedResponse<ListVectorStoresDataObject>>();
-            // If the ListVectorStoresDataObject does not have the same structure as the ListVectorStores response from the API, create a new class for it and replace ListVectorStoresDataObject with it.
-            // Example:
-            // var response = new ApiResponse<IEnumerable<ListVectorStoresResponse>>();
-
-            // Make a call to your API/system to retrieve the objects/type for the connector's configuration.
             try
             {
-                //response = await _apiClient.GetRecords<ListVectorStoresDataObject>(
-                //    relativeUrl: "listVectorStores",
-                //    page: _currentPage,
-                //    cancellationToken: cancellationToken)
-                //    .ConfigureAwait(false);
+                var apiResponse = await _apiClient.ListVectorStores(
+                    after: _lastId,
+                    limit: limit,
+                    order: order,
+                    cancellationToken: cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (!apiResponse.IsSuccessful || apiResponse.Data == null)
+                {
+                    throw new HttpRequestException($"Failed to retrieve vector stores. Status code: {apiResponse.StatusCode}");
+                }
+
+                response = apiResponse.Data;
             }
             catch (HttpRequestException exception)
             {
@@ -46,33 +94,12 @@ public class ListVectorStoresDataReader : TypedAsyncDataReaderBase<ListVectorSto
                 throw;
             }
 
-            if (!response.IsSuccessful)
-            {
-                throw new Exception($"Failed to retrieve records for 'ListVectorStoresDataObject'. API StatusCode: {response.StatusCode}");
-            }
+            if (response == null) yield break;
 
-            if (response.Data == null || !response.Data.Items.Any()) break;
+            yield return response;
 
-            // Return the data objects to Cache.
-            foreach (var item in response.Data.Items)
-            {
-                // If new class was created to match the API response, create a new ListVectorStoresDataObject object, map the properties and return a ListVectorStoresDataObject.
-
-                // Example:
-                //var resource = new ListVectorStoresDataObject
-                //{
-                //// TODO: Map properties.      
-                //};
-                //yield return resource;
-                yield return item;
-            }
-
-            // Handle pagination per API client design
-            _currentPage++;
-            if (_currentPage >= response.Data.TotalPages)
-            {
-                break;
-            }
+            if (!response.HasMore) break;
+            _lastId = response.LastId;
         }
     }
 }

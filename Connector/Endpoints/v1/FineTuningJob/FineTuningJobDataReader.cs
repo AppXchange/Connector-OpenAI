@@ -1,4 +1,5 @@
 using Connector.Client;
+using Connector.Extensions;
 using System;
 using ESR.Hosting.CacheWriter;
 using Microsoft.Extensions.Logging;
@@ -14,65 +15,66 @@ namespace Connector.Endpoints.v1.FineTuningJob;
 public class FineTuningJobDataReader : TypedAsyncDataReaderBase<FineTuningJobDataObject>
 {
     private readonly ILogger<FineTuningJobDataReader> _logger;
-    private int _currentPage = 0;
+    private readonly ApiClient _apiClient;
 
     public FineTuningJobDataReader(
-        ILogger<FineTuningJobDataReader> logger)
+        ILogger<FineTuningJobDataReader> logger,
+        ApiClient apiClient)
     {
         _logger = logger;
+        _apiClient = apiClient;
     }
 
-    public override async IAsyncEnumerable<FineTuningJobDataObject> GetTypedDataAsync(DataObjectCacheWriteArguments ? dataObjectRunArguments, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public override async IAsyncEnumerable<FineTuningJobDataObject> GetTypedDataAsync(
+        DataObjectCacheWriteArguments? dataObjectRunArguments,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        while (true)
+        if (dataObjectRunArguments == null)
         {
-            var response = new ApiResponse<PaginatedResponse<FineTuningJobDataObject>>();
-            // If the FineTuningJobDataObject does not have the same structure as the FineTuningJob response from the API, create a new class for it and replace FineTuningJobDataObject with it.
-            // Example:
-            // var response = new ApiResponse<IEnumerable<FineTuningJobResponse>>();
+            _logger.LogError("DataObjectRunArguments is null");
+            yield break;
+        }
 
-            // Make a call to your API/system to retrieve the objects/type for the connector's configuration.
-            try
+        string? fineTuningJobId = null;
+        try
+        {
+            fineTuningJobId = dataObjectRunArguments.TryGetParameterValue<string>("fine_tuning_job_id", out var id) ? id : null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting fine-tuning job ID from arguments");
+            yield break;
+        }
+
+        if (string.IsNullOrEmpty(fineTuningJobId))
+        {
+            _logger.LogError("Fine-tuning job ID is null or empty");
+            yield break;
+        }
+
+        FineTuningJobDataObject? job = null;
+        try
+        {
+            var response = await _apiClient.GetFineTuningJob(fineTuningJobId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!response.IsSuccessful || response.Data == null)
             {
-                //response = await _apiClient.GetRecords<FineTuningJobDataObject>(
-                //    relativeUrl: "fineTuningJobs",
-                //    page: _currentPage,
-                //    cancellationToken: cancellationToken)
-                //    .ConfigureAwait(false);
-            }
-            catch (HttpRequestException exception)
-            {
-                _logger.LogError(exception, "Exception while making a read request to data object 'FineTuningJobDataObject'");
-                throw;
-            }
-
-            if (!response.IsSuccessful)
-            {
-                throw new Exception($"Failed to retrieve records for 'FineTuningJobDataObject'. API StatusCode: {response.StatusCode}");
-            }
-
-            if (response.Data == null || !response.Data.Items.Any()) break;
-
-            // Return the data objects to Cache.
-            foreach (var item in response.Data.Items)
-            {
-                // If new class was created to match the API response, create a new FineTuningJobDataObject object, map the properties and return a FineTuningJobDataObject.
-
-                // Example:
-                //var resource = new FineTuningJobDataObject
-                //{
-                //// TODO: Map properties.      
-                //};
-                //yield return resource;
-                yield return item;
+                _logger.LogError("Failed to get fine-tuning job. Status code: {StatusCode}", response.StatusCode);
+                yield break;
             }
 
-            // Handle pagination per API client design
-            _currentPage++;
-            if (_currentPage >= response.Data.TotalPages)
-            {
-                break;
-            }
+            job = response.Data;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving fine-tuning job");
+            yield break;
+        }
+
+        if (job != null)
+        {
+            yield return job;
         }
     }
 }

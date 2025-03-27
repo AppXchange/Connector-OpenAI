@@ -6,31 +6,66 @@ using System.Text.Json.Serialization;
 using Xchange.Connector.SDK.Action;
 
 /// <summary>
-/// Action object that will represent an action in the Xchange system. This will contain an input object type,
-/// an output object type, and a Action failure type (this will default to <see cref="StandardActionFailure"/>
-/// but that can be overridden with your own preferred type). These objects will be converted to a JsonSchema, 
-/// so add attributes to the properties to provide any descriptions, titles, ranges, max, min, etc... 
-/// These types will be used for validation at runtime to make sure the objects being passed through the system 
-/// are properly formed. The schema also helps provide integrators more information for what the values 
-/// are intended to be.
+/// Action for adding a part to an existing upload in OpenAI
 /// </summary>
-[Description("AddPartUploadAction Action description goes here")]
+[Description("Adds a part (chunk of bytes) to an existing upload object")]
 public class AddPartUploadAction : IStandardAction<AddPartUploadActionInput, AddPartUploadActionOutput>
 {
-    public AddPartUploadActionInput ActionInput { get; set; } = new();
-    public AddPartUploadActionOutput ActionOutput { get; set; } = new();
+    public AddPartUploadActionInput ActionInput { get; set; } = new() 
+    { 
+        UploadId = string.Empty,
+        Data = Array.Empty<byte>()
+    };
+    public AddPartUploadActionOutput ActionOutput { get; set; } = new()
+    {
+        Id = string.Empty,
+        Object = "upload.part",
+        CreatedAt = 0,
+        UploadId = string.Empty
+    };
     public StandardActionFailure ActionFailure { get; set; } = new();
 
     public bool CreateRtap => true;
 }
 
+/// <summary>
+/// Input parameters for adding a part to an upload
+/// </summary>
 public class AddPartUploadActionInput
 {
+    [JsonPropertyName("upload_id")]
+    [Description("The ID of the Upload to add the part to")]
+    [Required]
+    public required string UploadId { get; set; }
 
+    [JsonPropertyName("data")]
+    [Description("The chunk of bytes for this Part (max 64MB)")]
+    [Required]
+    public required byte[] Data { get; set; }
 }
 
+/// <summary>
+/// Response from adding a part to an upload
+/// </summary>
 public class AddPartUploadActionOutput
 {
     [JsonPropertyName("id")]
-    public Guid Id { get; set; }
+    [Description("The upload Part unique identifier")]
+    [Required]
+    public required string Id { get; set; }
+
+    [JsonPropertyName("object")]
+    [Description("The object type, which is always 'upload.part'")]
+    [Required]
+    public required string Object { get; set; }
+
+    [JsonPropertyName("created_at")]
+    [Description("The Unix timestamp (in seconds) for when the Part was created")]
+    [Required]
+    public required long CreatedAt { get; set; }
+
+    [JsonPropertyName("upload_id")]
+    [Description("The ID of the Upload object that this Part was added to")]
+    [Required]
+    public required string UploadId { get; set; }
 }

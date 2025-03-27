@@ -6,19 +6,29 @@ using System.Text.Json.Serialization;
 using Xchange.Connector.SDK.CacheWriter;
 
 /// <summary>
-/// Data object that will represent an object in the Xchange system. This will be converted to a JsonSchema, 
-/// so add attributes to the properties to provide any descriptions, titles, ranges, max, min, etc... 
-/// These types will be used for validation at runtime to make sure the objects being passed through the system 
-/// are properly formed. The schema also helps provide integrators more information for what the values 
-/// are intended to be.
+/// Represents the content of a file from OpenAI's API
 /// </summary>
 [PrimaryKey("id", nameof(Id))]
-//[AlternateKey("alt-key-id", nameof(CompanyId), nameof(EquipmentNumber))]
-[Description("Example description of the object.")]
+[Description("Represents the content of a file from OpenAI's API")]
 public class FileContentDataObject
 {
     [JsonPropertyName("id")]
-    [Description("Example primary key of the object")]
+    [Description("The unique identifier for the file content")]
     [Required]
-    public required Guid Id { get; init; }
+    public required string Id { get; init; }
+
+    [JsonPropertyName("content")]
+    [Description("The actual content of the file")]
+    [Required]
+    public required string Content { get; init; }
+
+    [JsonPropertyName("file_id")]
+    [Description("The ID of the file this content belongs to")]
+    [Required]
+    public required string FileId { get; init; }
+
+    [JsonPropertyName("created_at")]
+    [Description("The Unix timestamp (in seconds) for when the content was retrieved")]
+    [Required]
+    public required long CreatedAt { get; init; }
 }

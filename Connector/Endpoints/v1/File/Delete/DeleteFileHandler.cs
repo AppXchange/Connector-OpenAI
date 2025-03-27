@@ -16,42 +16,62 @@ namespace Connector.Endpoints.v1.File.Delete;
 public class DeleteFileHandler : IActionHandler<DeleteFileAction>
 {
     private readonly ILogger<DeleteFileHandler> _logger;
+    private readonly ApiClient _apiClient;
 
     public DeleteFileHandler(
-        ILogger<DeleteFileHandler> logger)
+        ILogger<DeleteFileHandler> logger,
+        ApiClient apiClient)
     {
         _logger = logger;
+        _apiClient = apiClient;
     }
     
     public async Task<ActionHandlerOutcome> HandleQueuedActionAsync(ActionInstance actionInstance, CancellationToken cancellationToken)
     {
         var input = JsonSerializer.Deserialize<DeleteFileActionInput>(actionInstance.InputJson);
+        if (input == null)
+        {
+            _logger.LogError("Failed to deserialize input");
+            return ActionHandlerOutcome.Failed(new StandardActionFailure
+            {
+                Code = "400",
+                Errors = new[]
+                {
+                    new Xchange.Connector.SDK.Action.Error
+                    {
+                        Source = new[] { "DeleteFileHandler" },
+                        Text = "Failed to deserialize input"
+                    }
+                }
+            });
+        }
+
         try
         {
-            // Given the input for the action, make a call to your API/system
-            var response = new ApiResponse<DeleteFileActionOutput>();
-            // response = await _apiClient.PostFileDataObject(input, cancellationToken)
-            // .ConfigureAwait(false);
+            var response = await _apiClient.DeleteFile(input.FileId, cancellationToken)
+                .ConfigureAwait(false);
 
-            // The full record is needed for SyncOperations. If the endpoint used for the action returns a partial record (such as only returning the ID) then you can either:
-            // - Make a GET call using the ID that was returned
-            // - Add the ID property to your action input (Assuming this results in the proper data object shape)
+            if (!response.IsSuccessful || response.Data == null)
+            {
+                _logger.LogError("Failed to delete file. Status code: {StatusCode}", response.StatusCode);
+                return ActionHandlerOutcome.Failed(new StandardActionFailure
+                {
+                    Code = response.StatusCode.ToString(),
+                    Errors = new[]
+                    {
+                        new Xchange.Connector.SDK.Action.Error
+                        {
+                            Source = new[] { "DeleteFileHandler" },
+                            Text = "Failed to delete file"
+                        }
+                    }
+                });
+            }
 
-            // var resource = await _apiClient.GetFileDataObject(response.Data.id, cancellationToken);
-
-            // var resource = new DeleteFileActionOutput
-            // {
-            //      TODO : map
-            // };
-
-            // If the response is already the output object for the action, you can use the response directly
-
-            // Build sync operations to update the local cache as well as the Xchange cache system (if the data type is cached)
-            // For more information on SyncOperations and the KeyResolver, check: https://trimble-xchange.github.io/connector-docs/guides/creating-actions/#keyresolver-and-the-sync-cache-operations
             var operations = new List<SyncOperation>();
             var keyResolver = new DefaultDataObjectKey();
             var key = keyResolver.BuildKeyResolver()(response.Data);
-            operations.Add(SyncOperation.CreateSyncOperation(UpdateOperation.Upsert.ToString(), key.UrlPart, key.PropertyNames, response.Data));
+            operations.Add(SyncOperation.CreateSyncOperation(UpdateOperation.Delete.ToString(), key.UrlPart, key.PropertyNames, response.Data));
 
             var resultList = new List<CacheSyncCollection>
             {
@@ -62,10 +82,6 @@ public class DeleteFileHandler : IActionHandler<DeleteFileAction>
         }
         catch (HttpRequestException exception)
         {
-            // If an error occurs, we want to create a failure result for the action that matches
-            // the failure type for the action. 
-            // Common to create extension methods to map to Standard Action Failure
-
             var errorSource = new List<string> { "DeleteFileHandler" };
             if (string.IsNullOrEmpty(exception.Source)) errorSource.Add(exception.Source!);
             

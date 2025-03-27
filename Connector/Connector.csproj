@@ -16,6 +16,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="OpenAI" Version="2.1.0" />
         <PackageReference Include="Trimble.Xchange.Connector.SDK" Version="1.4.6" />
         <PackageReference Include="Trimble.Xchange.Connector.SDK.Test.Local" Version="1.4.6" />
     </ItemGroup>

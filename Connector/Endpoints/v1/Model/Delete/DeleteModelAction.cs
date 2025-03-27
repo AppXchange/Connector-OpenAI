@@ -1,36 +1,56 @@
-namespace Connector.Endpoints.v1.Model.Delete;
-
 using Json.Schema.Generation;
 using System;
 using System.Text.Json.Serialization;
 using Xchange.Connector.SDK.Action;
 
+namespace Connector.Endpoints.v1.Model.Delete;
+
 /// <summary>
-/// Action object that will represent an action in the Xchange system. This will contain an input object type,
-/// an output object type, and a Action failure type (this will default to <see cref="StandardActionFailure"/>
-/// but that can be overridden with your own preferred type). These objects will be converted to a JsonSchema, 
-/// so add attributes to the properties to provide any descriptions, titles, ranges, max, min, etc... 
-/// These types will be used for validation at runtime to make sure the objects being passed through the system 
-/// are properly formed. The schema also helps provide integrators more information for what the values 
-/// are intended to be.
+/// Action for deleting a fine-tuned model from OpenAI
 /// </summary>
-[Description("DeleteModelAction Action description goes here")]
+[Description("Deletes a fine-tuned model from OpenAI. Requires Owner role in the organization.")]
 public class DeleteModelAction : IStandardAction<DeleteModelActionInput, DeleteModelActionOutput>
 {
-    public DeleteModelActionInput ActionInput { get; set; } = new();
-    public DeleteModelActionOutput ActionOutput { get; set; } = new();
+    public DeleteModelActionInput ActionInput { get; set; } = new() { Model = string.Empty };
+    public DeleteModelActionOutput ActionOutput { get; set; } = new() 
+    { 
+        Id = string.Empty,
+        Object = "model",
+        Deleted = false
+    };
     public StandardActionFailure ActionFailure { get; set; } = new();
 
     public bool CreateRtap => true;
 }
 
+/// <summary>
+/// Input parameters for deleting a model
+/// </summary>
 public class DeleteModelActionInput
 {
-
+    [JsonPropertyName("model")]
+    [Description("The model identifier to delete")]
+    [Required]
+    public required string Model { get; set; }
 }
 
+/// <summary>
+/// Response from deleting a model
+/// </summary>
 public class DeleteModelActionOutput
 {
     [JsonPropertyName("id")]
-    public Guid Id { get; set; }
+    [Description("The identifier of the deleted model")]
+    [Required]
+    public required string Id { get; set; }
+
+    [JsonPropertyName("object")]
+    [Description("The object type, which is always 'model'")]
+    [Required]
+    public required string Object { get; set; }
+
+    [JsonPropertyName("deleted")]
+    [Description("Whether the model was successfully deleted")]
+    [Required]
+    public required bool Deleted { get; set; }
 }

@@ -16,7 +16,7 @@ ______
 
 
 # Auth
-https://docs.nanonets.com/reference/authentication
+https://platform.openai.com/docs/api-reference/authentication
 xchange client new --type Http --auth-type ApiKey
 
 
@@ -218,6 +218,9 @@ https://platform.openai.com/docs/api-reference/runs/createThreadAndRun
 xchange action new --module-id assistants-1 --object-name Run --name CreateThread
 https://platform.openai.com/docs/api-reference/runs/listRuns
 xchange data-object new --module-id assistants-1 --name ListRuns
+https://platform.openai.com/docs/api-reference/runs/submitToolOutputs
+xchange action new --module-id assistants-1 --object-name Run --name submitToolOutputs
+
 
 
 
@@ -255,6 +258,9 @@ https://platform.openai.com/docs/api-reference/vector-stores-files/createFile
 xchange action new --module-id assistants-1 --object-name VectorStoreFile --name Create
 https://platform.openai.com/docs/api-reference/vector-stores-files/deleteFile
 xchange action new --module-id assistants-1 --object-name VectorStoreFile --name Delete
+https://platform.openai.com/docs/api-reference/vector-stores-files/getContent
+xchange action new --module-id assistants-1 --object-name VectorStoreFile --name FileContent
+
 
 
 

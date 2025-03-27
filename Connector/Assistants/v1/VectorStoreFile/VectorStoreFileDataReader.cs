@@ -3,7 +3,6 @@ using System;
 using ESR.Hosting.CacheWriter;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Xchange.Connector.SDK.CacheWriter;
@@ -11,68 +10,76 @@ using System.Net.Http;
 
 namespace Connector.Assistants.v1.VectorStoreFile;
 
+internal static class DataObjectExtensions
+{
+    public static bool TryGetParameterValue<T>(this DataObjectCacheWriteArguments args, string key, out T? value)
+    {
+        value = default;
+        if (args == null) return false;
+
+        var dict = args.GetType().GetProperty("Arguments")?.GetValue(args) as IDictionary<string, object>;
+        if (dict == null || !dict.ContainsKey(key)) return false;
+
+        try
+        {
+            value = (T)dict[key];
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+}
+
 public class VectorStoreFileDataReader : TypedAsyncDataReaderBase<VectorStoreFileDataObject>
 {
     private readonly ILogger<VectorStoreFileDataReader> _logger;
-    private int _currentPage = 0;
+    private readonly ApiClient _apiClient;
 
     public VectorStoreFileDataReader(
-        ILogger<VectorStoreFileDataReader> logger)
+        ILogger<VectorStoreFileDataReader> logger,
+        ApiClient apiClient)
     {
         _logger = logger;
+        _apiClient = apiClient;
     }
 
-    public override async IAsyncEnumerable<VectorStoreFileDataObject> GetTypedDataAsync(DataObjectCacheWriteArguments ? dataObjectRunArguments, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public override async IAsyncEnumerable<VectorStoreFileDataObject> GetTypedDataAsync(
+        DataObjectCacheWriteArguments? dataObjectRunArguments,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        while (true)
+        if (dataObjectRunArguments == null)
         {
-            var response = new ApiResponse<PaginatedResponse<VectorStoreFileDataObject>>();
-            // If the VectorStoreFileDataObject does not have the same structure as the VectorStoreFile response from the API, create a new class for it and replace VectorStoreFileDataObject with it.
-            // Example:
-            // var response = new ApiResponse<IEnumerable<VectorStoreFileResponse>>();
-
-            // Make a call to your API/system to retrieve the objects/type for the connector's configuration.
-            try
-            {
-                //response = await _apiClient.GetRecords<VectorStoreFileDataObject>(
-                //    relativeUrl: "vectorStoreFiles",
-                //    page: _currentPage,
-                //    cancellationToken: cancellationToken)
-                //    .ConfigureAwait(false);
-            }
-            catch (HttpRequestException exception)
-            {
-                _logger.LogError(exception, "Exception while making a read request to data object 'VectorStoreFileDataObject'");
-                throw;
-            }
-
-            if (!response.IsSuccessful)
-            {
-                throw new Exception($"Failed to retrieve records for 'VectorStoreFileDataObject'. API StatusCode: {response.StatusCode}");
-            }
-
-            if (response.Data == null || !response.Data.Items.Any()) break;
-
-            // Return the data objects to Cache.
-            foreach (var item in response.Data.Items)
-            {
-                // If new class was created to match the API response, create a new VectorStoreFileDataObject object, map the properties and return a VectorStoreFileDataObject.
-
-                // Example:
-                //var resource = new VectorStoreFileDataObject
-                //{
-                //// TODO: Map properties.      
-                //};
-                //yield return resource;
-                yield return item;
-            }
-
-            // Handle pagination per API client design
-            _currentPage++;
-            if (_currentPage >= response.Data.TotalPages)
-            {
-                break;
-            }
+            throw new ArgumentException("DataObjectCacheWriteArguments is required");
         }
+
+        if (!dataObjectRunArguments.TryGetParameterValue("vector_store_id", out string? vectorStoreId) || string.IsNullOrEmpty(vectorStoreId))
+        {
+            throw new ArgumentException("vector_store_id is required");
+        }
+
+        if (!dataObjectRunArguments.TryGetParameterValue("file_id", out string? fileId) || string.IsNullOrEmpty(fileId))
+        {
+            throw new ArgumentException("file_id is required");
+        }
+
+        VectorStoreFileDataObject? response = null;
+        ApiResponse<VectorStoreFileDataObject>? apiResponse = null;
+
+        apiResponse = await _apiClient.GetVectorStoreFile(
+            vectorStoreId: vectorStoreId,
+            fileId: fileId,
+            cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!apiResponse.IsSuccessful || apiResponse.Data == null)
+        {
+            _logger.LogError("Failed to retrieve vector store file. Status code: {StatusCode}", apiResponse.StatusCode);
+            throw new HttpRequestException($"Failed to retrieve vector store file. Status code: {apiResponse.StatusCode}");
+        }
+
+        response = apiResponse.Data;
+        yield return response;
     }
 }

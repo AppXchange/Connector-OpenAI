@@ -6,19 +6,26 @@ using System.Text.Json.Serialization;
 using Xchange.Connector.SDK.Action;
 
 /// <summary>
-/// Action object that will represent an action in the Xchange system. This will contain an input object type,
-/// an output object type, and a Action failure type (this will default to <see cref="StandardActionFailure"/>
-/// but that can be overridden with your own preferred type). These objects will be converted to a JsonSchema, 
-/// so add attributes to the properties to provide any descriptions, titles, ranges, max, min, etc... 
-/// These types will be used for validation at runtime to make sure the objects being passed through the system 
-/// are properly formed. The schema also helps provide integrators more information for what the values 
-/// are intended to be.
+/// Action for uploading a file to OpenAI's API
 /// </summary>
-[Description("UploadFileAction Action description goes here")]
+[Description("Uploads a file that can be used across various OpenAI endpoints")]
 public class UploadFileAction : IStandardAction<UploadFileActionInput, UploadFileActionOutput>
 {
-    public UploadFileActionInput ActionInput { get; set; } = new();
-    public UploadFileActionOutput ActionOutput { get; set; } = new();
+    public UploadFileActionInput ActionInput { get; set; } = new()
+    {
+        File = Array.Empty<byte>(),
+        Filename = string.Empty,
+        Purpose = string.Empty
+    };
+    public UploadFileActionOutput ActionOutput { get; set; } = new()
+    {
+        Id = string.Empty,
+        Object = "file",
+        Bytes = 0,
+        CreatedAt = 0,
+        Filename = string.Empty,
+        Purpose = string.Empty
+    };
     public StandardActionFailure ActionFailure { get; set; } = new();
 
     public bool CreateRtap => true;
@@ -26,11 +33,51 @@ public class UploadFileAction : IStandardAction<UploadFileActionInput, UploadFil
 
 public class UploadFileActionInput
 {
+    [JsonPropertyName("file")]
+    [Description("The file content to be uploaded")]
+    [Required]
+    public required byte[] File { get; set; }
 
+    [JsonPropertyName("filename")]
+    [Description("The name of the file")]
+    [Required]
+    public required string Filename { get; set; }
+
+    [JsonPropertyName("purpose")]
+    [Description("The intended purpose of the uploaded file")]
+    [Required]
+    public required string Purpose { get; set; }
 }
 
 public class UploadFileActionOutput
 {
     [JsonPropertyName("id")]
-    public Guid Id { get; set; }
+    [Description("The file identifier, which can be referenced in the API endpoints")]
+    [Required]
+    public required string Id { get; set; }
+
+    [JsonPropertyName("object")]
+    [Description("The object type, which is always 'file'")]
+    [Required]
+    public required string Object { get; set; }
+
+    [JsonPropertyName("bytes")]
+    [Description("The size of the file, in bytes")]
+    [Required]
+    public required int Bytes { get; set; }
+
+    [JsonPropertyName("created_at")]
+    [Description("The Unix timestamp (in seconds) for when the file was created")]
+    [Required]
+    public required long CreatedAt { get; set; }
+
+    [JsonPropertyName("filename")]
+    [Description("The name of the file")]
+    [Required]
+    public required string Filename { get; set; }
+
+    [JsonPropertyName("purpose")]
+    [Description("The intended purpose of the file")]
+    [Required]
+    public required string Purpose { get; set; }
 }

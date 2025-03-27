@@ -11,68 +11,89 @@ using System.Net.Http;
 
 namespace Connector.Endpoints.v1.File;
 
+internal static class DataObjectExtensions
+{
+    public static bool TryGetParameterValue<T>(this DataObjectCacheWriteArguments args, string key, out T? value)
+    {
+        value = default;
+        if (args == null) return false;
+
+        var dict = args.GetType().GetProperty("Arguments")?.GetValue(args) as IDictionary<string, object>;
+        if (dict == null || !dict.ContainsKey(key)) return false;
+
+        try
+        {
+            value = (T)dict[key];
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+}
+
 public class FileDataReader : TypedAsyncDataReaderBase<FileDataObject>
 {
     private readonly ILogger<FileDataReader> _logger;
-    private int _currentPage = 0;
+    private readonly ApiClient _apiClient;
 
     public FileDataReader(
-        ILogger<FileDataReader> logger)
+        ILogger<FileDataReader> logger,
+        ApiClient apiClient)
     {
         _logger = logger;
+        _apiClient = apiClient;
     }
 
-    public override async IAsyncEnumerable<FileDataObject> GetTypedDataAsync(DataObjectCacheWriteArguments ? dataObjectRunArguments, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public override async IAsyncEnumerable<FileDataObject> GetTypedDataAsync(DataObjectCacheWriteArguments? dataObjectRunArguments, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        while (true)
+        FileDataObject? fileData = null;
+        try
         {
-            var response = new ApiResponse<PaginatedResponse<FileDataObject>>();
-            // If the FileDataObject does not have the same structure as the File response from the API, create a new class for it and replace FileDataObject with it.
-            // Example:
-            // var response = new ApiResponse<IEnumerable<FileResponse>>();
+            if (dataObjectRunArguments == null)
+            {
+                _logger.LogError("DataObjectRunArguments is null");
+                yield break;
+            }
 
-            // Make a call to your API/system to retrieve the objects/type for the connector's configuration.
-            try
+            if (!dataObjectRunArguments.TryGetParameterValue("id", out string? fileId) || string.IsNullOrEmpty(fileId))
             {
-                //response = await _apiClient.GetRecords<FileDataObject>(
-                //    relativeUrl: "files",
-                //    page: _currentPage,
-                //    cancellationToken: cancellationToken)
-                //    .ConfigureAwait(false);
+                _logger.LogError("File ID is null or empty");
+                yield break;
             }
-            catch (HttpRequestException exception)
-            {
-                _logger.LogError(exception, "Exception while making a read request to data object 'FileDataObject'");
-                throw;
-            }
+
+            var response = await _apiClient.GetFile(fileId, cancellationToken)
+                .ConfigureAwait(false);
 
             if (!response.IsSuccessful)
             {
-                throw new Exception($"Failed to retrieve records for 'FileDataObject'. API StatusCode: {response.StatusCode}");
+                _logger.LogError("Failed to retrieve file. Status code: {StatusCode}", response.StatusCode);
+                yield break;
             }
 
-            if (response.Data == null || !response.Data.Items.Any()) break;
-
-            // Return the data objects to Cache.
-            foreach (var item in response.Data.Items)
+            if (response.Data == null)
             {
-                // If new class was created to match the API response, create a new FileDataObject object, map the properties and return a FileDataObject.
-
-                // Example:
-                //var resource = new FileDataObject
-                //{
-                //// TODO: Map properties.      
-                //};
-                //yield return resource;
-                yield return item;
+                _logger.LogWarning("No file data received from API");
+                yield break;
             }
 
-            // Handle pagination per API client design
-            _currentPage++;
-            if (_currentPage >= response.Data.TotalPages)
-            {
-                break;
-            }
+            fileData = response.Data;
+        }
+        catch (HttpRequestException exception)
+        {
+            _logger.LogError(exception, "Exception while retrieving file from OpenAI API");
+            throw;
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Unexpected error while retrieving file");
+            throw;
+        }
+
+        if (fileData != null)
+        {
+            yield return fileData;
         }
     }
 }

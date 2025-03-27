@@ -1,4 +1,5 @@
 using Connector.Client;
+using Connector.Extensions;
 using System;
 using ESR.Hosting.CacheWriter;
 using Microsoft.Extensions.Logging;
@@ -14,65 +15,57 @@ namespace Connector.Assistants.v1.Message;
 public class MessageDataReader : TypedAsyncDataReaderBase<MessageDataObject>
 {
     private readonly ILogger<MessageDataReader> _logger;
-    private int _currentPage = 0;
+    private readonly ApiClient _apiClient;
 
     public MessageDataReader(
-        ILogger<MessageDataReader> logger)
+        ILogger<MessageDataReader> logger,
+        ApiClient apiClient)
     {
         _logger = logger;
+        _apiClient = apiClient;
     }
 
-    public override async IAsyncEnumerable<MessageDataObject> GetTypedDataAsync(DataObjectCacheWriteArguments ? dataObjectRunArguments, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public override async IAsyncEnumerable<MessageDataObject> GetTypedDataAsync(
+        DataObjectCacheWriteArguments? dataObjectRunArguments, 
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        while (true)
+        if (dataObjectRunArguments == null)
         {
-            var response = new ApiResponse<PaginatedResponse<MessageDataObject>>();
-            // If the MessageDataObject does not have the same structure as the Message response from the API, create a new class for it and replace MessageDataObject with it.
-            // Example:
-            // var response = new ApiResponse<IEnumerable<MessageResponse>>();
+            throw new ArgumentNullException(nameof(dataObjectRunArguments));
+        }
 
-            // Make a call to your API/system to retrieve the objects/type for the connector's configuration.
-            try
+        if (!dataObjectRunArguments.TryGetParameterValue("threadId", out string? threadId) || string.IsNullOrEmpty(threadId))
+        {
+            throw new ArgumentException("Thread ID is required");
+        }
+
+        if (!dataObjectRunArguments.TryGetParameterValue("messageId", out string? messageId) || string.IsNullOrEmpty(messageId))
+        {
+            throw new ArgumentException("Message ID is required");
+        }
+
+        MessageDataObject? message = null;
+        try
+        {
+            var response = await _apiClient.GetMessage(threadId, messageId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!response.IsSuccessful || response.Data == null)
             {
-                //response = await _apiClient.GetRecords<MessageDataObject>(
-                //    relativeUrl: "messages",
-                //    page: _currentPage,
-                //    cancellationToken: cancellationToken)
-                //    .ConfigureAwait(false);
-            }
-            catch (HttpRequestException exception)
-            {
-                _logger.LogError(exception, "Exception while making a read request to data object 'MessageDataObject'");
-                throw;
-            }
-
-            if (!response.IsSuccessful)
-            {
-                throw new Exception($"Failed to retrieve records for 'MessageDataObject'. API StatusCode: {response.StatusCode}");
-            }
-
-            if (response.Data == null || !response.Data.Items.Any()) break;
-
-            // Return the data objects to Cache.
-            foreach (var item in response.Data.Items)
-            {
-                // If new class was created to match the API response, create a new MessageDataObject object, map the properties and return a MessageDataObject.
-
-                // Example:
-                //var resource = new MessageDataObject
-                //{
-                //// TODO: Map properties.      
-                //};
-                //yield return resource;
-                yield return item;
+                throw new HttpRequestException($"Failed to retrieve message. Status code: {response.StatusCode}");
             }
 
-            // Handle pagination per API client design
-            _currentPage++;
-            if (_currentPage >= response.Data.TotalPages)
-            {
-                break;
-            }
+            message = response.Data;
+        }
+        catch (HttpRequestException exception)
+        {
+            _logger.LogError(exception, "Exception while making a read request to data object 'MessageDataObject'");
+            throw;
+        }
+
+        if (message != null)
+        {
+            yield return message;
         }
     }
 }

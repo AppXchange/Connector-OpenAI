@@ -16,38 +16,48 @@ namespace Connector.Endpoints.v1.ChatCompletion.Update;
 public class UpdateChatCompletionHandler : IActionHandler<UpdateChatCompletionAction>
 {
     private readonly ILogger<UpdateChatCompletionHandler> _logger;
+    private readonly ApiClient _apiClient;
 
     public UpdateChatCompletionHandler(
-        ILogger<UpdateChatCompletionHandler> logger)
+        ILogger<UpdateChatCompletionHandler> logger,
+        ApiClient apiClient)
     {
         _logger = logger;
+        _apiClient = apiClient;
     }
     
     public async Task<ActionHandlerOutcome> HandleQueuedActionAsync(ActionInstance actionInstance, CancellationToken cancellationToken)
     {
         var input = JsonSerializer.Deserialize<UpdateChatCompletionActionInput>(actionInstance.InputJson);
+        if (input == null)
+        {
+            return ActionHandlerOutcome.Failed(new StandardActionFailure
+            {
+                Code = "400",
+                Errors = new[] { new Error { Source = new[] { nameof(UpdateChatCompletionHandler) }, Text = "Invalid input data" } }
+            });
+        }
+
         try
         {
-            // Given the input for the action, make a call to your API/system
-            var response = new ApiResponse<UpdateChatCompletionActionOutput>();
-            // response = await _apiClient.PostChatCompletionDataObject(input, cancellationToken)
-            // .ConfigureAwait(false);
+            var response = await _apiClient.UpdateChatCompletion(input.CompletionId, input.Metadata, cancellationToken);
 
-            // The full record is needed for SyncOperations. If the endpoint used for the action returns a partial record (such as only returning the ID) then you can either:
-            // - Make a GET call using the ID that was returned
-            // - Add the ID property to your action input (Assuming this results in the proper data object shape)
+            if (!response.IsSuccessful || response.Data == null)
+            {
+                return ActionHandlerOutcome.Failed(new StandardActionFailure
+                {
+                    Code = response.StatusCode.ToString(),
+                    Errors = new[]
+                    {
+                        new Error
+                        {
+                            Source = new[] { nameof(UpdateChatCompletionHandler) },
+                            Text = $"Failed to update chat completion with status code {response.StatusCode}"
+                        }
+                    }
+                });
+            }
 
-            // var resource = await _apiClient.GetChatCompletionDataObject(response.Data.id, cancellationToken);
-
-            // var resource = new UpdateChatCompletionActionOutput
-            // {
-            //      TODO : map
-            // };
-
-            // If the response is already the output object for the action, you can use the response directly
-
-            // Build sync operations to update the local cache as well as the Xchange cache system (if the data type is cached)
-            // For more information on SyncOperations and the KeyResolver, check: https://trimble-xchange.github.io/connector-docs/guides/creating-actions/#keyresolver-and-the-sync-cache-operations
             var operations = new List<SyncOperation>();
             var keyResolver = new DefaultDataObjectKey();
             var key = keyResolver.BuildKeyResolver()(response.Data);
@@ -62,19 +72,15 @@ public class UpdateChatCompletionHandler : IActionHandler<UpdateChatCompletionAc
         }
         catch (HttpRequestException exception)
         {
-            // If an error occurs, we want to create a failure result for the action that matches
-            // the failure type for the action. 
-            // Common to create extension methods to map to Standard Action Failure
-
-            var errorSource = new List<string> { "UpdateChatCompletionHandler" };
+            var errorSource = new List<string> { nameof(UpdateChatCompletionHandler) };
             if (string.IsNullOrEmpty(exception.Source)) errorSource.Add(exception.Source!);
             
             return ActionHandlerOutcome.Failed(new StandardActionFailure
             {
                 Code = exception.StatusCode?.ToString() ?? "500",
-                Errors = new []
+                Errors = new[]
                 {
-                    new Xchange.Connector.SDK.Action.Error
+                    new Error
                     {
                         Source = errorSource.ToArray(),
                         Text = exception.Message

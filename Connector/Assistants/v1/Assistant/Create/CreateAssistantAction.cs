@@ -2,23 +2,26 @@ namespace Connector.Assistants.v1.Assistant.Create;
 
 using Json.Schema.Generation;
 using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Xchange.Connector.SDK.Action;
 
 /// <summary>
-/// Action object that will represent an action in the Xchange system. This will contain an input object type,
-/// an output object type, and a Action failure type (this will default to <see cref="StandardActionFailure"/>
-/// but that can be overridden with your own preferred type). These objects will be converted to a JsonSchema, 
-/// so add attributes to the properties to provide any descriptions, titles, ranges, max, min, etc... 
-/// These types will be used for validation at runtime to make sure the objects being passed through the system 
-/// are properly formed. The schema also helps provide integrators more information for what the values 
-/// are intended to be.
+/// Action to create a new OpenAI Assistant.
 /// </summary>
-[Description("CreateAssistantAction Action description goes here")]
+[Description("Creates a new OpenAI Assistant with specified model and configuration")]
 public class CreateAssistantAction : IStandardAction<CreateAssistantActionInput, CreateAssistantActionOutput>
 {
-    public CreateAssistantActionInput ActionInput { get; set; } = new();
-    public CreateAssistantActionOutput ActionOutput { get; set; } = new();
+    public CreateAssistantActionInput ActionInput { get; set; } = new() { Model = "gpt-4-turbo-preview" };
+    public CreateAssistantActionOutput ActionOutput { get; set; } = new() 
+    { 
+        Id = string.Empty,
+        Object = "assistant",
+        CreatedAt = 0,
+        Model = "gpt-4-turbo-preview",
+        Tools = Array.Empty<AssistantTool>(),
+        Metadata = new Dictionary<string, string>()
+    };
     public StandardActionFailure ActionFailure { get; set; } = new();
 
     public bool CreateRtap => true;
@@ -26,11 +29,113 @@ public class CreateAssistantAction : IStandardAction<CreateAssistantActionInput,
 
 public class CreateAssistantActionInput
 {
+    [JsonPropertyName("model")]
+    [Description("ID of the model to use")]
+    [Required]
+    public required string Model { get; set; }
 
+    [JsonPropertyName("name")]
+    [Description("The name of the assistant. Maximum length is 256 characters")]
+    public string? Name { get; set; }
+
+    [JsonPropertyName("description")]
+    [Description("The description of the assistant. Maximum length is 512 characters")]
+    public string? Description { get; set; }
+
+    [JsonPropertyName("instructions")]
+    [Description("The system instructions that the assistant uses. Maximum length is 256,000 characters")]
+    public string? Instructions { get; set; }
+
+    [JsonPropertyName("tools")]
+    [Description("A list of tools enabled on the assistant. Maximum of 128 tools per assistant")]
+    public AssistantTool[]? Tools { get; set; }
+
+    [JsonPropertyName("metadata")]
+    [Description("Set of 16 key-value pairs that can be attached to an object")]
+    public Dictionary<string, string>? Metadata { get; set; }
+
+    [JsonPropertyName("file_ids")]
+    [Description("List of file IDs for code_interpreter tool")]
+    public string[]? FileIds { get; set; }
+
+    [JsonPropertyName("temperature")]
+    [Description("What sampling temperature to use, between 0 and 2")]
+    public double? Temperature { get; set; }
+
+    [JsonPropertyName("top_p")]
+    [Description("An alternative to sampling with temperature, called nucleus sampling")]
+    public double? TopP { get; set; }
+
+    [JsonPropertyName("response_format")]
+    [Description("Specifies the format that the model must output")]
+    public ResponseFormat? ResponseFormat { get; set; }
+
+    [JsonPropertyName("tool_resources")]
+    [Description("A set of resources that are used by the assistant's tools")]
+    public ToolResources? ToolResources { get; set; }
+
+    [JsonPropertyName("reasoning_effort")]
+    [Description("Constrains effort on reasoning for reasoning models")]
+    public string? ReasoningEffort { get; set; }
 }
 
 public class CreateAssistantActionOutput
 {
     [JsonPropertyName("id")]
-    public Guid Id { get; set; }
+    [Description("The identifier of the assistant")]
+    [Required]
+    public required string Id { get; set; }
+
+    [JsonPropertyName("object")]
+    [Description("The object type, which is always 'assistant'")]
+    [Required]
+    public required string Object { get; set; }
+
+    [JsonPropertyName("created_at")]
+    [Description("The Unix timestamp (in seconds) for when the assistant was created")]
+    [Required]
+    public required long CreatedAt { get; set; }
+
+    [JsonPropertyName("name")]
+    [Description("The name of the assistant")]
+    public string? Name { get; set; }
+
+    [JsonPropertyName("description")]
+    [Description("The description of the assistant")]
+    public string? Description { get; set; }
+
+    [JsonPropertyName("model")]
+    [Description("ID of the model to use")]
+    [Required]
+    public required string Model { get; set; }
+
+    [JsonPropertyName("instructions")]
+    [Description("The system instructions that the assistant uses")]
+    public string? Instructions { get; set; }
+
+    [JsonPropertyName("tools")]
+    [Description("A list of tools enabled on the assistant")]
+    [Required]
+    public required AssistantTool[] Tools { get; set; }
+
+    [JsonPropertyName("metadata")]
+    [Description("Set of key-value pairs attached to the object")]
+    [Required]
+    public required Dictionary<string, string> Metadata { get; set; }
+
+    [JsonPropertyName("top_p")]
+    [Description("An alternative to sampling with temperature")]
+    public double? TopP { get; set; }
+
+    [JsonPropertyName("temperature")]
+    [Description("What sampling temperature to use")]
+    public double? Temperature { get; set; }
+
+    [JsonPropertyName("response_format")]
+    [Description("Specifies the format that the model must output")]
+    public ResponseFormat? ResponseFormat { get; set; }
+
+    [JsonPropertyName("tool_resources")]
+    [Description("A set of resources that are used by the assistant's tools")]
+    public ToolResources? ToolResources { get; set; }
 }

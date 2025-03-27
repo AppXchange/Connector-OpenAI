@@ -14,65 +14,49 @@ namespace Connector.Endpoints.v1.ChatCompletion;
 public class ChatCompletionDataReader : TypedAsyncDataReaderBase<ChatCompletionDataObject>
 {
     private readonly ILogger<ChatCompletionDataReader> _logger;
+    private readonly ApiClient _apiClient;
     private int _currentPage = 0;
 
     public ChatCompletionDataReader(
-        ILogger<ChatCompletionDataReader> logger)
+        ILogger<ChatCompletionDataReader> logger,
+        ApiClient apiClient)
     {
         _logger = logger;
+        _apiClient = apiClient;
     }
 
-    public override async IAsyncEnumerable<ChatCompletionDataObject> GetTypedDataAsync(DataObjectCacheWriteArguments ? dataObjectRunArguments, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public override async IAsyncEnumerable<ChatCompletionDataObject> GetTypedDataAsync(DataObjectCacheWriteArguments? dataObjectRunArguments, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        while (true)
+        ApiResponse<PaginatedResponse<ChatCompletionDataObject>> response;
+        try
         {
-            var response = new ApiResponse<PaginatedResponse<ChatCompletionDataObject>>();
-            // If the ChatCompletionDataObject does not have the same structure as the ChatCompletion response from the API, create a new class for it and replace ChatCompletionDataObject with it.
-            // Example:
-            // var response = new ApiResponse<IEnumerable<ChatCompletionResponse>>();
+            response = await _apiClient.GetChatCompletions(_currentPage, cancellationToken);
+        }
+        catch (HttpRequestException exception)
+        {
+            _logger.LogError(exception, "Exception while making a read request to data object 'ChatCompletionDataObject'");
+            throw;
+        }
 
-            // Make a call to your API/system to retrieve the objects/type for the connector's configuration.
-            try
-            {
-                //response = await _apiClient.GetRecords<ChatCompletionDataObject>(
-                //    relativeUrl: "chatCompletions",
-                //    page: _currentPage,
-                //    cancellationToken: cancellationToken)
-                //    .ConfigureAwait(false);
-            }
-            catch (HttpRequestException exception)
-            {
-                _logger.LogError(exception, "Exception while making a read request to data object 'ChatCompletionDataObject'");
-                throw;
-            }
+        if (!response.IsSuccessful)
+        {
+            throw new Exception($"Failed to retrieve chat completions. API StatusCode: {response.StatusCode}");
+        }
 
-            if (!response.IsSuccessful)
-            {
-                throw new Exception($"Failed to retrieve records for 'ChatCompletionDataObject'. API StatusCode: {response.StatusCode}");
-            }
+        if (response.Data == null || !response.Data.Items.Any())
+        {
+            yield break;
+        }
 
-            if (response.Data == null || !response.Data.Items.Any()) break;
+        foreach (var item in response.Data.Items)
+        {
+            yield return item;
+        }
 
-            // Return the data objects to Cache.
-            foreach (var item in response.Data.Items)
-            {
-                // If new class was created to match the API response, create a new ChatCompletionDataObject object, map the properties and return a ChatCompletionDataObject.
-
-                // Example:
-                //var resource = new ChatCompletionDataObject
-                //{
-                //// TODO: Map properties.      
-                //};
-                //yield return resource;
-                yield return item;
-            }
-
-            // Handle pagination per API client design
-            _currentPage++;
-            if (_currentPage >= response.Data.TotalPages)
-            {
-                break;
-            }
+        _currentPage++;
+        if (_currentPage >= response.Data.TotalPages)
+        {
+            yield break;
         }
     }
 }

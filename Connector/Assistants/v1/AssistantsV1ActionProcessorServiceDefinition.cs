@@ -12,6 +12,7 @@ using Connector.Assistants.v1.Run.Cancel;
 using Connector.Assistants.v1.Run.Create;
 using Connector.Assistants.v1.Run.CreateThread;
 using Connector.Assistants.v1.Run.Modify;
+using Connector.Assistants.v1.Run.SubmitToolOutputs;
 using Connector.Assistants.v1.Thread;
 using Connector.Assistants.v1.Thread.Create;
 using Connector.Assistants.v1.Thread.Delete;
@@ -23,6 +24,7 @@ using Connector.Assistants.v1.VectorStore.Modify;
 using Connector.Assistants.v1.VectorStoreFile;
 using Connector.Assistants.v1.VectorStoreFile.Create;
 using Connector.Assistants.v1.VectorStoreFile.Delete;
+using Connector.Assistants.v1.VectorStoreFile.FileContent;
 using Connector.Assistants.v1.VectorStoreFileInBatch;
 using Connector.Assistants.v1.VectorStoreFileInBatch.Cancel;
 using Connector.Assistants.v1.VectorStoreFileInBatch.Create;
@@ -72,6 +74,8 @@ public class AssistantsV1ActionProcessorServiceDefinition : BaseActionHandlerSer
         serviceCollection.AddScoped<DeleteVectorStoreFileHandler>();
         serviceCollection.AddScoped<CreateVectorStoreFileInBatchHandler>();
         serviceCollection.AddScoped<CancelVectorStoreFileInBatchHandler>();
+        serviceCollection.AddScoped<SubmitToolOutputsRunHandler>();
+        serviceCollection.AddScoped<FileContentVectorStoreFileHandler>();
     }
 
     public override void ConfigureService(IActionHandlerService service, AssistantsV1ActionProcessorConfig config)
@@ -97,5 +101,7 @@ public class AssistantsV1ActionProcessorServiceDefinition : BaseActionHandlerSer
         service.RegisterHandlerForDataObjectAction<DeleteVectorStoreFileHandler, VectorStoreFileDataObject>(ModuleId, "vector-store-file", "delete", config.DeleteVectorStoreFileConfig);
         service.RegisterHandlerForDataObjectAction<CreateVectorStoreFileInBatchHandler, VectorStoreFileInBatchDataObject>(ModuleId, "vector-store-file-in-batch", "create", config.CreateVectorStoreFileInBatchConfig);
         service.RegisterHandlerForDataObjectAction<CancelVectorStoreFileInBatchHandler, VectorStoreFileInBatchDataObject>(ModuleId, "vector-store-file-in-batch", "cancel", config.CancelVectorStoreFileInBatchConfig);
+        service.RegisterHandlerForDataObjectAction<SubmitToolOutputsRunHandler, RunDataObject>(ModuleId, "run", "submit-tool-outputs", config.SubmitToolOutputsRunConfig);
+        service.RegisterHandlerForDataObjectAction<FileContentVectorStoreFileHandler, VectorStoreFileDataObject>(ModuleId, "vector-store-file", "file-content", config.FileContentVectorStoreFileConfig);
     }
 }

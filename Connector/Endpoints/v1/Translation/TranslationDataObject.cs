@@ -14,11 +14,24 @@ using Xchange.Connector.SDK.CacheWriter;
 /// </summary>
 [PrimaryKey("id", nameof(Id))]
 //[AlternateKey("alt-key-id", nameof(CompanyId), nameof(EquipmentNumber))]
-[Description("Example description of the object.")]
+[Description("Represents a translation response from OpenAI's API")]
 public class TranslationDataObject
 {
     [JsonPropertyName("id")]
-    [Description("Example primary key of the object")]
+    [Description("Unique identifier for the translation")]
     [Required]
     public required Guid Id { get; init; }
+
+    [JsonPropertyName("text")]
+    [Description("The translated text")]
+    [Required]
+    public required string Text { get; init; }
+
+    [JsonPropertyName("duration")]
+    [Description("The duration of the input audio in seconds")]
+    public double? Duration { get; init; }
+
+    [JsonPropertyName("language")]
+    [Description("The language of the input audio")]
+    public string? Language { get; init; }
 }

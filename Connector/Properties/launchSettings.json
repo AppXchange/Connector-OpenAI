@@ -26,6 +26,590 @@
         "DIFFYCACHE_DBLOCATION": "./databases",
         "ESR__QueueName": "localrun"
       }
+    },
+    "Transcription Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl transcription --actionUrl create",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Translation Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl translation --actionUrl create",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Speech Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl speech --actionUrl create",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Chat Completion Cache Writer Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType CacheWriter --dataObjectUrl chat-completion",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Chat Completion Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl chat-completion --actionUrl create",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Chat Completion Delete Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl chat-completion --actionUrl delete",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Chat Completion Update Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl chat-completion --actionUrl update",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Chat Completion List Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl chat-completion-list --actionUrl list",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Chat Messages Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl chat-messages --actionUrl list",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Embeddings Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl embeddings --actionUrl create",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Moderation Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl moderation --actionUrl create",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Batch Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl batch --actionUrl get",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Batch Create Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl batch --actionUrl create",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Batch Cancel Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl batch --actionUrl cancel",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Batch List Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl batch --actionUrl list",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "File Cache Writer Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType CacheWriter --dataObjectUrl file",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "File Upload Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl file --actionUrl upload",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "File Delete Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl file --actionUrl delete",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "File Content Cache Writer Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType CacheWriter --dataObjectUrl filecontent",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "File List Cache Writer Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType CacheWriter --dataObjectUrl filelist",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Fine Tuning Checkpoints Cache Writer Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType CacheWriter --dataObjectUrl fine-tuning-checkpoints",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Fine Tuning Events Cache Writer Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType CacheWriter --dataObjectUrl fine-tuning-events",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Fine Tuning Jobs Cache Writer Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType CacheWriter --dataObjectUrl fine-tuning-jobs",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Fine Tuning Job Cache Writer Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType CacheWriter --dataObjectUrl fine-tuning-job",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Fine Tuning Job Create Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl fine-tuning-job --actionUrl create",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Fine Tuning Job Cancel Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl fine-tuning-job --actionUrl cancel",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Image Create Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl image --actionUrl create",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Image Edit Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl image --actionUrl create-edit",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Image Variation Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl image --actionUrl create-variation",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Model Cache Writer Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType CacheWriter --dataObjectUrl model",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Model List Cache Writer Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType CacheWriter --dataObjectUrl model-list",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Model Delete Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl model --actionUrl delete",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Upload Create Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl upload --actionUrl create",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Upload Add Part Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl upload --actionUrl add-part",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Upload Cancel Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl upload --actionUrl cancel",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Upload Complete Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl upload --actionUrl complete",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Assistant Cache Writer Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType CacheWriter --dataObjectUrl assistant",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Assistant Create Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl assistant --actionUrl create",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Assistant Delete Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl assistant --actionUrl delete",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Assistant Modify Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl assistant --actionUrl modify",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Assistant List Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl assistant --actionUrl list",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Thread Cache Writer Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType CacheWriter --dataObjectUrl thread",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Thread Create Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl thread --actionUrl create",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Thread Delete Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl thread --actionUrl delete",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Thread Modify Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl thread --actionUrl modify",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Message Cache Writer Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType CacheWriter --dataObjectUrl message",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Message Create Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl message --actionUrl create",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Message Delete Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl message --actionUrl delete",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Message Modify Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl message --actionUrl modify",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Message List Cache Writer Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType CacheWriter --dataObjectUrl message",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Run Cache Writer Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType CacheWriter --dataObjectUrl run",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Cancel Run Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl run --actionUrl cancel",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Create Run Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl run --actionUrl create",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Create Thread Run Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl run --actionUrl createthread",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Modify Run Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl run --actionUrl modify",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "List Runs Cache Writer Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType CacheWriter --dataObjectUrl list-runs",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Run Step Cache Writer Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType CacheWriter --dataObjectUrl run-step",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Submit Tool Outputs Run Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl run --actionUrl submit-tool-outputs",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "List Run Steps Cache Writer Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType CacheWriter --dataObjectUrl list-run-steps",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Vector Store Cache Writer Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType CacheWriter --dataObjectUrl vector-store",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Create Vector Store Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl vector-store --actionUrl create",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Delete Vector Store Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl vector-store --actionUrl delete",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Modify Vector Store Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl vector-store --actionUrl modify",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "List Vector Stores Cache Writer Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType CacheWriter --dataObjectUrl list-vector-stores",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Vector Store File Cache Writer Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType CacheWriter --dataObjectUrl vector-store-file",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Create Vector Store File Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl vector-store-file --actionUrl create",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Delete Vector Store File Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl vector-store-file --actionUrl delete",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Vector Store File Content Cache Writer Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType CacheWriter --dataObjectUrl vector-store-file-content",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "List Vector Store Files Cache Writer Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType CacheWriter --dataObjectUrl list-vector-store-files",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Vector Store File Batch Cache Writer Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType CacheWriter --dataObjectUrl vector-store-file-batch",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Cancel Vector Store File Batch Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --actionUrl cancel-vector-store-file-batch",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "Create Vector Store File Batch Action Processor Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType ActionProcessor --dataObjectUrl vector-store-file-batch --actionUrl create",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
+    },
+    "List Vector Store Files In Batch Cache Writer Local Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--isLocal true --moduleId app-1 --serviceType CacheWriter --dataObjectUrl list-vector-store-files-in-batch",
+      "environmentVariables": {
+        "DIFFYCACHE_DBLOCATION": "./databases",
+        "ESR__QueueName": "localrun"
+      }
     }
   }
 }

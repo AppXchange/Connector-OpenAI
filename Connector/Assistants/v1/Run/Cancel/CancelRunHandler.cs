@@ -16,38 +16,45 @@ namespace Connector.Assistants.v1.Run.Cancel;
 public class CancelRunHandler : IActionHandler<CancelRunAction>
 {
     private readonly ILogger<CancelRunHandler> _logger;
+    private readonly ApiClient _apiClient;
 
     public CancelRunHandler(
-        ILogger<CancelRunHandler> logger)
+        ILogger<CancelRunHandler> logger,
+        ApiClient apiClient)
     {
         _logger = logger;
+        _apiClient = apiClient;
     }
     
     public async Task<ActionHandlerOutcome> HandleQueuedActionAsync(ActionInstance actionInstance, CancellationToken cancellationToken)
     {
         var input = JsonSerializer.Deserialize<CancelRunActionInput>(actionInstance.InputJson);
+        if (input == null)
+        {
+            return ActionHandlerOutcome.Failed(new StandardActionFailure
+            {
+                Code = "400",
+                Errors = new[]
+                {
+                    new Xchange.Connector.SDK.Action.Error
+                    {
+                        Source = new[] { "CancelRunHandler" },
+                        Text = "Invalid input data"
+                    }
+                }
+            });
+        }
+
         try
         {
-            // Given the input for the action, make a call to your API/system
-            var response = new ApiResponse<CancelRunActionOutput>();
-            // response = await _apiClient.PostRunDataObject(input, cancellationToken)
-            // .ConfigureAwait(false);
+            var response = await _apiClient.CancelRun(input.ThreadId, input.RunId, cancellationToken)
+                .ConfigureAwait(false);
 
-            // The full record is needed for SyncOperations. If the endpoint used for the action returns a partial record (such as only returning the ID) then you can either:
-            // - Make a GET call using the ID that was returned
-            // - Add the ID property to your action input (Assuming this results in the proper data object shape)
+            if (!response.IsSuccessful || response.Data == null)
+            {
+                throw new HttpRequestException($"Failed to cancel run. Status code: {response.StatusCode}");
+            }
 
-            // var resource = await _apiClient.GetRunDataObject(response.Data.id, cancellationToken);
-
-            // var resource = new CancelRunActionOutput
-            // {
-            //      TODO : map
-            // };
-
-            // If the response is already the output object for the action, you can use the response directly
-
-            // Build sync operations to update the local cache as well as the Xchange cache system (if the data type is cached)
-            // For more information on SyncOperations and the KeyResolver, check: https://trimble-xchange.github.io/connector-docs/guides/creating-actions/#keyresolver-and-the-sync-cache-operations
             var operations = new List<SyncOperation>();
             var keyResolver = new DefaultDataObjectKey();
             var key = keyResolver.BuildKeyResolver()(response.Data);
@@ -62,10 +69,6 @@ public class CancelRunHandler : IActionHandler<CancelRunAction>
         }
         catch (HttpRequestException exception)
         {
-            // If an error occurs, we want to create a failure result for the action that matches
-            // the failure type for the action. 
-            // Common to create extension methods to map to Standard Action Failure
-
             var errorSource = new List<string> { "CancelRunHandler" };
             if (string.IsNullOrEmpty(exception.Source)) errorSource.Add(exception.Source!);
             

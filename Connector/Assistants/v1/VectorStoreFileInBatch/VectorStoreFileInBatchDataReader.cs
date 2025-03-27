@@ -3,7 +3,6 @@ using System;
 using ESR.Hosting.CacheWriter;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Xchange.Connector.SDK.CacheWriter;
@@ -11,68 +10,85 @@ using System.Net.Http;
 
 namespace Connector.Assistants.v1.VectorStoreFileInBatch;
 
+internal static class DataObjectExtensions
+{
+    public static bool TryGetParameterValue<T>(this DataObjectCacheWriteArguments args, string key, out T? value)
+    {
+        value = default;
+        if (args == null) return false;
+
+        var dict = args.GetType().GetProperty("Arguments")?.GetValue(args) as IDictionary<string, object>;
+        if (dict == null || !dict.ContainsKey(key)) return false;
+
+        try
+        {
+            value = (T)dict[key];
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+}
+
 public class VectorStoreFileInBatchDataReader : TypedAsyncDataReaderBase<VectorStoreFileInBatchDataObject>
 {
     private readonly ILogger<VectorStoreFileInBatchDataReader> _logger;
-    private int _currentPage = 0;
+    private readonly ApiClient _apiClient;
 
     public VectorStoreFileInBatchDataReader(
-        ILogger<VectorStoreFileInBatchDataReader> logger)
+        ILogger<VectorStoreFileInBatchDataReader> logger,
+        ApiClient apiClient)
     {
         _logger = logger;
+        _apiClient = apiClient;
     }
 
-    public override async IAsyncEnumerable<VectorStoreFileInBatchDataObject> GetTypedDataAsync(DataObjectCacheWriteArguments ? dataObjectRunArguments, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public override async IAsyncEnumerable<VectorStoreFileInBatchDataObject> GetTypedDataAsync(
+        DataObjectCacheWriteArguments? dataObjectRunArguments,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        while (true)
+        if (dataObjectRunArguments == null)
         {
-            var response = new ApiResponse<PaginatedResponse<VectorStoreFileInBatchDataObject>>();
-            // If the VectorStoreFileInBatchDataObject does not have the same structure as the VectorStoreFileInBatch response from the API, create a new class for it and replace VectorStoreFileInBatchDataObject with it.
-            // Example:
-            // var response = new ApiResponse<IEnumerable<VectorStoreFileInBatchResponse>>();
+            throw new ArgumentException("DataObjectCacheWriteArguments is required");
+        }
 
-            // Make a call to your API/system to retrieve the objects/type for the connector's configuration.
-            try
+        if (!dataObjectRunArguments.TryGetParameterValue("vector_store_id", out string? vectorStoreId) || string.IsNullOrEmpty(vectorStoreId))
+        {
+            throw new ArgumentException("vector_store_id is required");
+        }
+
+        if (!dataObjectRunArguments.TryGetParameterValue("batch_id", out string? batchId) || string.IsNullOrEmpty(batchId))
+        {
+            throw new ArgumentException("batch_id is required");
+        }
+
+        VectorStoreFileInBatchDataObject? response = null;
+        try
+        {
+            var apiResponse = await _apiClient.GetVectorStoreFileBatch(
+                vectorStoreId: vectorStoreId,
+                batchId: batchId,
+                cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!apiResponse.IsSuccessful || apiResponse.Data == null)
             {
-                //response = await _apiClient.GetRecords<VectorStoreFileInBatchDataObject>(
-                //    relativeUrl: "vectorStoreFileInBatchs",
-                //    page: _currentPage,
-                //    cancellationToken: cancellationToken)
-                //    .ConfigureAwait(false);
-            }
-            catch (HttpRequestException exception)
-            {
-                _logger.LogError(exception, "Exception while making a read request to data object 'VectorStoreFileInBatchDataObject'");
-                throw;
-            }
-
-            if (!response.IsSuccessful)
-            {
-                throw new Exception($"Failed to retrieve records for 'VectorStoreFileInBatchDataObject'. API StatusCode: {response.StatusCode}");
-            }
-
-            if (response.Data == null || !response.Data.Items.Any()) break;
-
-            // Return the data objects to Cache.
-            foreach (var item in response.Data.Items)
-            {
-                // If new class was created to match the API response, create a new VectorStoreFileInBatchDataObject object, map the properties and return a VectorStoreFileInBatchDataObject.
-
-                // Example:
-                //var resource = new VectorStoreFileInBatchDataObject
-                //{
-                //// TODO: Map properties.      
-                //};
-                //yield return resource;
-                yield return item;
+                throw new HttpRequestException($"Failed to retrieve vector store file batch. Status code: {apiResponse.StatusCode}");
             }
 
-            // Handle pagination per API client design
-            _currentPage++;
-            if (_currentPage >= response.Data.TotalPages)
-            {
-                break;
-            }
+            response = apiResponse.Data;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving vector store file batch");
+            throw;
+        }
+
+        if (response != null)
+        {
+            yield return response;
         }
     }
 }

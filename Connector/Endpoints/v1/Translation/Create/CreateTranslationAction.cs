@@ -14,7 +14,7 @@ using Xchange.Connector.SDK.Action;
 /// are properly formed. The schema also helps provide integrators more information for what the values 
 /// are intended to be.
 /// </summary>
-[Description("CreateTranslationAction Action description goes here")]
+[Description("Creates a translation from an audio file using OpenAI's API")]
 public class CreateTranslationAction : IStandardAction<CreateTranslationActionInput, CreateTranslationActionOutput>
 {
     public CreateTranslationActionInput ActionInput { get; set; } = new();
@@ -26,11 +26,40 @@ public class CreateTranslationAction : IStandardAction<CreateTranslationActionIn
 
 public class CreateTranslationActionInput
 {
+    [JsonPropertyName("file")]
+    [Description("The audio file to translate")]
+    [Required]
+    public byte[] File { get; init; } = Array.Empty<byte>();
 
+    [JsonPropertyName("model")]
+    [Description("ID of the model to use (whisper-1)")]
+    [Required]
+    public string Model { get; init; } = "whisper-1";
+
+    [JsonPropertyName("prompt")]
+    [Description("Optional text to guide the model's style or continue a previous audio segment")]
+    public string? Prompt { get; init; }
+
+    [JsonPropertyName("response_format")]
+    [Description("The format of the output (json, text, srt, verbose_json, or vtt)")]
+    public string? ResponseFormat { get; init; }
+
+    [JsonPropertyName("temperature")]
+    [Description("The sampling temperature, between 0 and 1")]
+    public double? Temperature { get; init; }
 }
 
 public class CreateTranslationActionOutput
 {
     [JsonPropertyName("id")]
     public Guid Id { get; set; }
+
+    [JsonPropertyName("text")]
+    public string Text { get; set; } = string.Empty;
+
+    [JsonPropertyName("duration")]
+    public double? Duration { get; set; }
+
+    [JsonPropertyName("language")]
+    public string? Language { get; set; }
 }

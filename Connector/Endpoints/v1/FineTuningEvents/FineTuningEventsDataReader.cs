@@ -1,4 +1,5 @@
 using Connector.Client;
+using Connector.Extensions;
 using System;
 using ESR.Hosting.CacheWriter;
 using Microsoft.Extensions.Logging;
@@ -14,64 +15,83 @@ namespace Connector.Endpoints.v1.FineTuningEvents;
 public class FineTuningEventsDataReader : TypedAsyncDataReaderBase<FineTuningEventsDataObject>
 {
     private readonly ILogger<FineTuningEventsDataReader> _logger;
-    private int _currentPage = 0;
+    private readonly ApiClient _apiClient;
+    private string? _lastId;
 
     public FineTuningEventsDataReader(
-        ILogger<FineTuningEventsDataReader> logger)
+        ILogger<FineTuningEventsDataReader> logger,
+        ApiClient apiClient)
     {
         _logger = logger;
+        _apiClient = apiClient;
     }
 
-    public override async IAsyncEnumerable<FineTuningEventsDataObject> GetTypedDataAsync(DataObjectCacheWriteArguments ? dataObjectRunArguments, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public override async IAsyncEnumerable<FineTuningEventsDataObject> GetTypedDataAsync(
+        DataObjectCacheWriteArguments? dataObjectRunArguments,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
+        if (dataObjectRunArguments == null)
+        {
+            _logger.LogError("DataObjectRunArguments is null");
+            yield break;
+        }
+
+        string? fineTuningJobId = null;
+        try
+        {
+            fineTuningJobId = dataObjectRunArguments.TryGetParameterValue<string>("fine_tuning_job_id", out var id) ? id : null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting fine-tuning job ID from arguments");
+            yield break;
+        }
+
+        if (string.IsNullOrEmpty(fineTuningJobId))
+        {
+            _logger.LogError("Fine-tuning job ID is null or empty");
+            yield break;
+        }
+
         while (true)
         {
-            var response = new ApiResponse<PaginatedResponse<FineTuningEventsDataObject>>();
-            // If the FineTuningEventsDataObject does not have the same structure as the FineTuningEvents response from the API, create a new class for it and replace FineTuningEventsDataObject with it.
-            // Example:
-            // var response = new ApiResponse<IEnumerable<FineTuningEventsResponse>>();
-
-            // Make a call to your API/system to retrieve the objects/type for the connector's configuration.
+            var events = new List<FineTuningEventsDataObject>();
             try
             {
-                //response = await _apiClient.GetRecords<FineTuningEventsDataObject>(
-                //    relativeUrl: "fineTuningEvents",
-                //    page: _currentPage,
-                //    cancellationToken: cancellationToken)
-                //    .ConfigureAwait(false);
+                var response = await _apiClient.GetFineTuningEvents(fineTuningJobId, _lastId, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (!response.IsSuccessful || response.Data == null)
+                {
+                    _logger.LogError("Failed to get fine-tuning events. Status code: {StatusCode}", response.StatusCode);
+                    yield break;
+                }
+
+                if (response.Data.Data == null || !response.Data.Data.Any())
+                {
+                    break;
+                }
+
+                foreach (var evt in response.Data.Data)
+                {
+                    events.Add(evt);
+                    _lastId = evt.Id;
+                }
+
+                if (!response.Data.HasMore)
+                {
+                    break;
+                }
             }
-            catch (HttpRequestException exception)
+            catch (Exception ex)
             {
-                _logger.LogError(exception, "Exception while making a read request to data object 'FineTuningEventsDataObject'");
-                throw;
-            }
-
-            if (!response.IsSuccessful)
-            {
-                throw new Exception($"Failed to retrieve records for 'FineTuningEventsDataObject'. API StatusCode: {response.StatusCode}");
-            }
-
-            if (response.Data == null || !response.Data.Items.Any()) break;
-
-            // Return the data objects to Cache.
-            foreach (var item in response.Data.Items)
-            {
-                // If new class was created to match the API response, create a new FineTuningEventsDataObject object, map the properties and return a FineTuningEventsDataObject.
-
-                // Example:
-                //var resource = new FineTuningEventsDataObject
-                //{
-                //// TODO: Map properties.      
-                //};
-                //yield return resource;
-                yield return item;
+                _logger.LogError(ex, "Error retrieving fine-tuning events");
+                yield break;
             }
 
-            // Handle pagination per API client design
-            _currentPage++;
-            if (_currentPage >= response.Data.TotalPages)
+            foreach (var evt in events)
             {
-                break;
+                yield return evt;
             }
         }
     }

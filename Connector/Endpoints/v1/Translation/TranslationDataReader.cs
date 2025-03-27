@@ -14,31 +14,25 @@ namespace Connector.Endpoints.v1.Translation;
 public class TranslationDataReader : TypedAsyncDataReaderBase<TranslationDataObject>
 {
     private readonly ILogger<TranslationDataReader> _logger;
+    private readonly ApiClient _apiClient;
     private int _currentPage = 0;
 
     public TranslationDataReader(
-        ILogger<TranslationDataReader> logger)
+        ILogger<TranslationDataReader> logger,
+        ApiClient apiClient)
     {
         _logger = logger;
+        _apiClient = apiClient;
     }
 
-    public override async IAsyncEnumerable<TranslationDataObject> GetTypedDataAsync(DataObjectCacheWriteArguments ? dataObjectRunArguments, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public override async IAsyncEnumerable<TranslationDataObject> GetTypedDataAsync(DataObjectCacheWriteArguments? dataObjectRunArguments, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         while (true)
         {
-            var response = new ApiResponse<PaginatedResponse<TranslationDataObject>>();
-            // If the TranslationDataObject does not have the same structure as the Translation response from the API, create a new class for it and replace TranslationDataObject with it.
-            // Example:
-            // var response = new ApiResponse<IEnumerable<TranslationResponse>>();
-
-            // Make a call to your API/system to retrieve the objects/type for the connector's configuration.
+            ApiResponse<PaginatedResponse<TranslationDataObject>> response;
             try
             {
-                //response = await _apiClient.GetRecords<TranslationDataObject>(
-                //    relativeUrl: "translations",
-                //    page: _currentPage,
-                //    cancellationToken: cancellationToken)
-                //    .ConfigureAwait(false);
+                response = await _apiClient.GetTranslations(_currentPage, cancellationToken);
             }
             catch (HttpRequestException exception)
             {
@@ -48,26 +42,19 @@ public class TranslationDataReader : TypedAsyncDataReaderBase<TranslationDataObj
 
             if (!response.IsSuccessful)
             {
-                throw new Exception($"Failed to retrieve records for 'TranslationDataObject'. API StatusCode: {response.StatusCode}");
+                throw new Exception($"Failed to retrieve translations. API StatusCode: {response.StatusCode}");
             }
 
-            if (response.Data == null || !response.Data.Items.Any()) break;
+            if (response.Data == null || !response.Data.Items.Any())
+            {
+                break;
+            }
 
-            // Return the data objects to Cache.
             foreach (var item in response.Data.Items)
             {
-                // If new class was created to match the API response, create a new TranslationDataObject object, map the properties and return a TranslationDataObject.
-
-                // Example:
-                //var resource = new TranslationDataObject
-                //{
-                //// TODO: Map properties.      
-                //};
-                //yield return resource;
                 yield return item;
             }
 
-            // Handle pagination per API client design
             _currentPage++;
             if (_currentPage >= response.Data.TotalPages)
             {

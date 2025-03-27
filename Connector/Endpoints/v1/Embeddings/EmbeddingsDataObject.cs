@@ -14,11 +14,26 @@ using Xchange.Connector.SDK.CacheWriter;
 /// </summary>
 [PrimaryKey("id", nameof(Id))]
 //[AlternateKey("alt-key-id", nameof(CompanyId), nameof(EquipmentNumber))]
-[Description("Example description of the object.")]
+[Description("Represents an embedding vector from OpenAI's API")]
 public class EmbeddingsDataObject
 {
     [JsonPropertyName("id")]
     [Description("Example primary key of the object")]
     [Required]
     public required Guid Id { get; init; }
+
+    [JsonPropertyName("object")]
+    [Description("The type of this object, which is always 'embedding'")]
+    [Required]
+    public required string Object { get; init; }
+
+    [JsonPropertyName("embedding")]
+    [Description("The embedding vector, which is a list of floats")]
+    [Required]
+    public required float[] Embedding { get; init; }
+
+    [JsonPropertyName("index")]
+    [Description("The index of the embedding in the list of embeddings")]
+    [Required]
+    public required int Index { get; init; }
 }

@@ -1,24 +1,26 @@
 namespace Connector.Assistants.v1.VectorStoreFile.Delete;
 
 using Json.Schema.Generation;
-using System;
 using System.Text.Json.Serialization;
 using Xchange.Connector.SDK.Action;
 
 /// <summary>
-/// Action object that will represent an action in the Xchange system. This will contain an input object type,
-/// an output object type, and a Action failure type (this will default to <see cref="StandardActionFailure"/>
-/// but that can be overridden with your own preferred type). These objects will be converted to a JsonSchema, 
-/// so add attributes to the properties to provide any descriptions, titles, ranges, max, min, etc... 
-/// These types will be used for validation at runtime to make sure the objects being passed through the system 
-/// are properly formed. The schema also helps provide integrators more information for what the values 
-/// are intended to be.
+/// Action to delete a vector store file.
 /// </summary>
-[Description("DeleteVectorStoreFileAction Action description goes here")]
+[Description("Deletes a vector store file from a vector store")]
 public class DeleteVectorStoreFileAction : IStandardAction<DeleteVectorStoreFileActionInput, DeleteVectorStoreFileActionOutput>
 {
-    public DeleteVectorStoreFileActionInput ActionInput { get; set; } = new();
-    public DeleteVectorStoreFileActionOutput ActionOutput { get; set; } = new();
+    public DeleteVectorStoreFileActionInput ActionInput { get; set; } = new()
+    {
+        VectorStoreId = string.Empty,
+        FileId = string.Empty
+    };
+    public DeleteVectorStoreFileActionOutput ActionOutput { get; set; } = new()
+    {
+        Id = string.Empty,
+        Object = "vector_store.file.deleted",
+        Deleted = true
+    };
     public StandardActionFailure ActionFailure { get; set; } = new();
 
     public bool CreateRtap => true;
@@ -26,11 +28,31 @@ public class DeleteVectorStoreFileAction : IStandardAction<DeleteVectorStoreFile
 
 public class DeleteVectorStoreFileActionInput
 {
+    [JsonPropertyName("vector_store_id")]
+    [Description("The ID of the vector store that the file belongs to")]
+    [Required]
+    public required string VectorStoreId { get; init; }
 
+    [JsonPropertyName("file_id")]
+    [Description("The ID of the file to delete")]
+    [Required]
+    public required string FileId { get; init; }
 }
 
 public class DeleteVectorStoreFileActionOutput
 {
     [JsonPropertyName("id")]
-    public Guid Id { get; set; }
+    [Description("The ID of the deleted file")]
+    [Required]
+    public required string Id { get; init; }
+
+    [JsonPropertyName("object")]
+    [Description("The object type, which is always vector_store.file.deleted")]
+    [Required]
+    public required string Object { get; init; }
+
+    [JsonPropertyName("deleted")]
+    [Description("Whether the vector store file was successfully deleted")]
+    [Required]
+    public required bool Deleted { get; init; }
 }

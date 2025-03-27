@@ -1,5 +1,4 @@
 using Connector.Client;
-using System;
 using ESR.Hosting.CacheWriter;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
@@ -14,65 +13,46 @@ namespace Connector.Endpoints.v1.Model;
 public class ModelDataReader : TypedAsyncDataReaderBase<ModelDataObject>
 {
     private readonly ILogger<ModelDataReader> _logger;
-    private int _currentPage = 0;
+    private readonly ApiClient _apiClient;
+    private readonly string _modelId;
 
     public ModelDataReader(
-        ILogger<ModelDataReader> logger)
+        ILogger<ModelDataReader> logger,
+        ApiClient apiClient,
+        string modelId)
     {
         _logger = logger;
+        _apiClient = apiClient;
+        _modelId = modelId;
     }
 
-    public override async IAsyncEnumerable<ModelDataObject> GetTypedDataAsync(DataObjectCacheWriteArguments ? dataObjectRunArguments, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public override async IAsyncEnumerable<ModelDataObject> GetTypedDataAsync(
+        DataObjectCacheWriteArguments? dataObjectRunArguments, 
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        while (true)
+        ModelDataObject? model = null;
+        try
         {
-            var response = new ApiResponse<PaginatedResponse<ModelDataObject>>();
-            // If the ModelDataObject does not have the same structure as the Model response from the API, create a new class for it and replace ModelDataObject with it.
-            // Example:
-            // var response = new ApiResponse<IEnumerable<ModelResponse>>();
+            var response = await _apiClient.GetModel(_modelId, cancellationToken)
+                .ConfigureAwait(false);
 
-            // Make a call to your API/system to retrieve the objects/type for the connector's configuration.
-            try
+            if (!response.IsSuccessful || response.Data == null)
             {
-                //response = await _apiClient.GetRecords<ModelDataObject>(
-                //    relativeUrl: "models",
-                //    page: _currentPage,
-                //    cancellationToken: cancellationToken)
-                //    .ConfigureAwait(false);
-            }
-            catch (HttpRequestException exception)
-            {
-                _logger.LogError(exception, "Exception while making a read request to data object 'ModelDataObject'");
-                throw;
+                _logger.LogError("Failed to retrieve model. Status code: {StatusCode}", response.StatusCode);
+                yield break;
             }
 
-            if (!response.IsSuccessful)
-            {
-                throw new Exception($"Failed to retrieve records for 'ModelDataObject'. API StatusCode: {response.StatusCode}");
-            }
+            model = response.Data;
+        }
+        catch (HttpRequestException exception)
+        {
+            _logger.LogError(exception, "Exception while making a read request to data object 'ModelDataObject'");
+            throw;
+        }
 
-            if (response.Data == null || !response.Data.Items.Any()) break;
-
-            // Return the data objects to Cache.
-            foreach (var item in response.Data.Items)
-            {
-                // If new class was created to match the API response, create a new ModelDataObject object, map the properties and return a ModelDataObject.
-
-                // Example:
-                //var resource = new ModelDataObject
-                //{
-                //// TODO: Map properties.      
-                //};
-                //yield return resource;
-                yield return item;
-            }
-
-            // Handle pagination per API client design
-            _currentPage++;
-            if (_currentPage >= response.Data.TotalPages)
-            {
-                break;
-            }
+        if (model != null)
+        {
+            yield return model;
         }
     }
 }

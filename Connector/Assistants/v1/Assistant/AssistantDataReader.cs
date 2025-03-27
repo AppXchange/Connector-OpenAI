@@ -1,4 +1,5 @@
 using Connector.Client;
+using Connector.Extensions;
 using System;
 using ESR.Hosting.CacheWriter;
 using Microsoft.Extensions.Logging;
@@ -14,65 +15,58 @@ namespace Connector.Assistants.v1.Assistant;
 public class AssistantDataReader : TypedAsyncDataReaderBase<AssistantDataObject>
 {
     private readonly ILogger<AssistantDataReader> _logger;
+    private readonly ApiClient _apiClient;
     private int _currentPage = 0;
 
     public AssistantDataReader(
-        ILogger<AssistantDataReader> logger)
+        ILogger<AssistantDataReader> logger,
+        ApiClient apiClient)
     {
         _logger = logger;
+        _apiClient = apiClient;
     }
 
-    public override async IAsyncEnumerable<AssistantDataObject> GetTypedDataAsync(DataObjectCacheWriteArguments ? dataObjectRunArguments, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public override async IAsyncEnumerable<AssistantDataObject> GetTypedDataAsync(DataObjectCacheWriteArguments? dataObjectRunArguments, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        while (true)
+        AssistantDataObject? result = null;
+        try
         {
-            var response = new ApiResponse<PaginatedResponse<AssistantDataObject>>();
-            // If the AssistantDataObject does not have the same structure as the Assistant response from the API, create a new class for it and replace AssistantDataObject with it.
-            // Example:
-            // var response = new ApiResponse<IEnumerable<AssistantResponse>>();
+            if (dataObjectRunArguments == null || !dataObjectRunArguments.TryGetParameterValue("id", out string? assistantId))
+            {
+                throw new ArgumentException("Assistant ID is required");
+            }
 
-            // Make a call to your API/system to retrieve the objects/type for the connector's configuration.
-            try
+            if (string.IsNullOrEmpty(assistantId))
             {
-                //response = await _apiClient.GetRecords<AssistantDataObject>(
-                //    relativeUrl: "assistants",
-                //    page: _currentPage,
-                //    cancellationToken: cancellationToken)
-                //    .ConfigureAwait(false);
+                throw new ArgumentException("Assistant ID cannot be null or empty");
             }
-            catch (HttpRequestException exception)
-            {
-                _logger.LogError(exception, "Exception while making a read request to data object 'AssistantDataObject'");
-                throw;
-            }
+
+            var response = await _apiClient.GetAssistant(
+                assistantId: assistantId,
+                cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
 
             if (!response.IsSuccessful)
             {
-                throw new Exception($"Failed to retrieve records for 'AssistantDataObject'. API StatusCode: {response.StatusCode}");
+                throw new Exception($"Failed to retrieve assistant. API StatusCode: {response.StatusCode}");
             }
 
-            if (response.Data == null || !response.Data.Items.Any()) break;
-
-            // Return the data objects to Cache.
-            foreach (var item in response.Data.Items)
+            if (response.Data == null)
             {
-                // If new class was created to match the API response, create a new AssistantDataObject object, map the properties and return a AssistantDataObject.
-
-                // Example:
-                //var resource = new AssistantDataObject
-                //{
-                //// TODO: Map properties.      
-                //};
-                //yield return resource;
-                yield return item;
+                throw new Exception("No assistant data received from API");
             }
 
-            // Handle pagination per API client design
-            _currentPage++;
-            if (_currentPage >= response.Data.TotalPages)
-            {
-                break;
-            }
+            result = response.Data;
+        }
+        catch (HttpRequestException exception)
+        {
+            _logger.LogError(exception, "Exception while making a read request to data object 'AssistantDataObject'");
+            throw;
+        }
+
+        if (result != null)
+        {
+            yield return result;
         }
     }
 }

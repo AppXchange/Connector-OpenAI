@@ -3,7 +3,6 @@ using System;
 using ESR.Hosting.CacheWriter;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Xchange.Connector.SDK.CacheWriter;
@@ -11,68 +10,80 @@ using System.Net.Http;
 
 namespace Connector.Assistants.v1.VectorStore;
 
+internal static class DataObjectExtensions
+{
+    public static bool TryGetParameterValue<T>(this DataObjectCacheWriteArguments args, string key, out T? value)
+    {
+        value = default;
+        if (args == null) return false;
+
+        var dict = args.GetType().GetProperty("Arguments")?.GetValue(args) as IDictionary<string, object>;
+        if (dict == null || !dict.ContainsKey(key)) return false;
+
+        try
+        {
+            value = (T)dict[key];
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+}
+
 public class VectorStoreDataReader : TypedAsyncDataReaderBase<VectorStoreDataObject>
 {
     private readonly ILogger<VectorStoreDataReader> _logger;
-    private int _currentPage = 0;
+    private readonly ApiClient _apiClient;
 
     public VectorStoreDataReader(
-        ILogger<VectorStoreDataReader> logger)
+        ILogger<VectorStoreDataReader> logger,
+        ApiClient apiClient)
     {
         _logger = logger;
+        _apiClient = apiClient;
     }
 
-    public override async IAsyncEnumerable<VectorStoreDataObject> GetTypedDataAsync(DataObjectCacheWriteArguments ? dataObjectRunArguments, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public override async IAsyncEnumerable<VectorStoreDataObject> GetTypedDataAsync(
+        DataObjectCacheWriteArguments? dataObjectRunArguments,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        while (true)
+        if (dataObjectRunArguments == null)
         {
-            var response = new ApiResponse<PaginatedResponse<VectorStoreDataObject>>();
-            // If the VectorStoreDataObject does not have the same structure as the VectorStore response from the API, create a new class for it and replace VectorStoreDataObject with it.
-            // Example:
-            // var response = new ApiResponse<IEnumerable<VectorStoreResponse>>();
+            throw new ArgumentException("DataObjectCacheWriteArguments is required");
+        }
 
-            // Make a call to your API/system to retrieve the objects/type for the connector's configuration.
-            try
-            {
-                //response = await _apiClient.GetRecords<VectorStoreDataObject>(
-                //    relativeUrl: "vectorStores",
-                //    page: _currentPage,
-                //    cancellationToken: cancellationToken)
-                //    .ConfigureAwait(false);
-            }
-            catch (HttpRequestException exception)
-            {
-                _logger.LogError(exception, "Exception while making a read request to data object 'VectorStoreDataObject'");
-                throw;
-            }
+        if (!dataObjectRunArguments.TryGetParameterValue("vector_store_id", out string? vectorStoreId) || string.IsNullOrEmpty(vectorStoreId))
+        {
+            throw new ArgumentException("Vector Store ID is required");
+        }
 
-            if (!response.IsSuccessful)
+        VectorStoreDataObject? response = null;
+
+        try
+        {
+            var apiResponse = await _apiClient.GetVectorStore(
+                vectorStoreId: vectorStoreId,
+                cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!apiResponse.IsSuccessful || apiResponse.Data == null)
             {
-                throw new Exception($"Failed to retrieve records for 'VectorStoreDataObject'. API StatusCode: {response.StatusCode}");
+                throw new HttpRequestException($"Failed to retrieve vector store. Status code: {apiResponse.StatusCode}");
             }
 
-            if (response.Data == null || !response.Data.Items.Any()) break;
+            response = apiResponse.Data;
+        }
+        catch (HttpRequestException exception)
+        {
+            _logger.LogError(exception, "Exception while making a read request to data object 'VectorStoreDataObject'");
+            throw;
+        }
 
-            // Return the data objects to Cache.
-            foreach (var item in response.Data.Items)
-            {
-                // If new class was created to match the API response, create a new VectorStoreDataObject object, map the properties and return a VectorStoreDataObject.
-
-                // Example:
-                //var resource = new VectorStoreDataObject
-                //{
-                //// TODO: Map properties.      
-                //};
-                //yield return resource;
-                yield return item;
-            }
-
-            // Handle pagination per API client design
-            _currentPage++;
-            if (_currentPage >= response.Data.TotalPages)
-            {
-                break;
-            }
+        if (response != null)
+        {
+            yield return response;
         }
     }
 }

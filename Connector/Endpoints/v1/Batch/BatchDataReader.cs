@@ -11,68 +11,65 @@ using System.Net.Http;
 
 namespace Connector.Endpoints.v1.Batch;
 
+internal static class DataObjectExtensions
+{
+    public static bool TryGetParameterValue<T>(this DataObjectCacheWriteArguments args, string key, out T? value)
+    {
+        value = default;
+        if (args == null) return false;
+
+        var dict = args.GetType().GetProperty("Arguments")?.GetValue(args) as IDictionary<string, object>;
+        if (dict == null || !dict.ContainsKey(key)) return false;
+
+        try
+        {
+            value = (T)dict[key];
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+}
+
 public class BatchDataReader : TypedAsyncDataReaderBase<BatchDataObject>
 {
     private readonly ILogger<BatchDataReader> _logger;
-    private int _currentPage = 0;
+    private readonly ApiClient _apiClient;
 
     public BatchDataReader(
-        ILogger<BatchDataReader> logger)
+        ILogger<BatchDataReader> logger,
+        ApiClient apiClient)
     {
         _logger = logger;
+        _apiClient = apiClient;
     }
 
-    public override async IAsyncEnumerable<BatchDataObject> GetTypedDataAsync(DataObjectCacheWriteArguments ? dataObjectRunArguments, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public override async IAsyncEnumerable<BatchDataObject> GetTypedDataAsync(DataObjectCacheWriteArguments? dataObjectRunArguments, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        while (true)
+        if (dataObjectRunArguments == null)
         {
-            var response = new ApiResponse<PaginatedResponse<BatchDataObject>>();
-            // If the BatchDataObject does not have the same structure as the Batch response from the API, create a new class for it and replace BatchDataObject with it.
-            // Example:
-            // var response = new ApiResponse<IEnumerable<BatchResponse>>();
+            _logger.LogError("DataObjectRunArguments is null");
+            yield break;
+        }
 
-            // Make a call to your API/system to retrieve the objects/type for the connector's configuration.
-            try
-            {
-                //response = await _apiClient.GetRecords<BatchDataObject>(
-                //    relativeUrl: "batchs",
-                //    page: _currentPage,
-                //    cancellationToken: cancellationToken)
-                //    .ConfigureAwait(false);
-            }
-            catch (HttpRequestException exception)
-            {
-                _logger.LogError(exception, "Exception while making a read request to data object 'BatchDataObject'");
-                throw;
-            }
+        if (!dataObjectRunArguments.TryGetParameterValue("id", out string? batchId) || string.IsNullOrEmpty(batchId))
+        {
+            _logger.LogError("Batch ID is null or empty");
+            yield break;
+        }
 
-            if (!response.IsSuccessful)
-            {
-                throw new Exception($"Failed to retrieve records for 'BatchDataObject'. API StatusCode: {response.StatusCode}");
-            }
+        var response = await _apiClient.GetBatch(batchId, cancellationToken).ConfigureAwait(false);
+        if (!response.IsSuccessful)
+        {
+            _logger.LogError("Failed to retrieve batch data. API StatusCode: {StatusCode}", response.StatusCode);
+            yield break;
+        }
 
-            if (response.Data == null || !response.Data.Items.Any()) break;
-
-            // Return the data objects to Cache.
-            foreach (var item in response.Data.Items)
-            {
-                // If new class was created to match the API response, create a new BatchDataObject object, map the properties and return a BatchDataObject.
-
-                // Example:
-                //var resource = new BatchDataObject
-                //{
-                //// TODO: Map properties.      
-                //};
-                //yield return resource;
-                yield return item;
-            }
-
-            // Handle pagination per API client design
-            _currentPage++;
-            if (_currentPage >= response.Data.TotalPages)
-            {
-                break;
-            }
+        if (response.Data != null)
+        {
+            yield return response.Data;
         }
     }
 }

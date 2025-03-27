@@ -9,6 +9,7 @@ using Connector.Assistants.v1.Run.Cancel;
 using Connector.Assistants.v1.Run.Create;
 using Connector.Assistants.v1.Run.CreateThread;
 using Connector.Assistants.v1.Run.Modify;
+using Connector.Assistants.v1.Run.SubmitToolOutputs;
 using Connector.Assistants.v1.Thread.Create;
 using Connector.Assistants.v1.Thread.Delete;
 using Connector.Assistants.v1.Thread.Modify;
@@ -17,6 +18,7 @@ using Connector.Assistants.v1.VectorStore.Delete;
 using Connector.Assistants.v1.VectorStore.Modify;
 using Connector.Assistants.v1.VectorStoreFile.Create;
 using Connector.Assistants.v1.VectorStoreFile.Delete;
+using Connector.Assistants.v1.VectorStoreFile.FileContent;
 using Connector.Assistants.v1.VectorStoreFileInBatch.Cancel;
 using Connector.Assistants.v1.VectorStoreFileInBatch.Create;
 using Json.Schema.Generation;
@@ -53,4 +55,6 @@ public class AssistantsV1ActionProcessorConfig
     public DefaultActionHandlerConfig DeleteVectorStoreFileConfig { get; set; } = new();
     public DefaultActionHandlerConfig CreateVectorStoreFileInBatchConfig { get; set; } = new();
     public DefaultActionHandlerConfig CancelVectorStoreFileInBatchConfig { get; set; } = new();
+    public DefaultActionHandlerConfig SubmitToolOutputsRunConfig { get; set; } = new();
+    public DefaultActionHandlerConfig FileContentVectorStoreFileConfig { get; set; } = new();
 }

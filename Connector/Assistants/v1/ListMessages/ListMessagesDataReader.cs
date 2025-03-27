@@ -1,4 +1,5 @@
 using Connector.Client;
+using Connector.Extensions;
 using System;
 using ESR.Hosting.CacheWriter;
 using Microsoft.Extensions.Logging;
@@ -14,65 +15,61 @@ namespace Connector.Assistants.v1.ListMessages;
 public class ListMessagesDataReader : TypedAsyncDataReaderBase<ListMessagesDataObject>
 {
     private readonly ILogger<ListMessagesDataReader> _logger;
-    private int _currentPage = 0;
+    private readonly ApiClient _apiClient;
+    private string? _lastId;
 
     public ListMessagesDataReader(
-        ILogger<ListMessagesDataReader> logger)
+        ILogger<ListMessagesDataReader> logger,
+        ApiClient apiClient)
     {
         _logger = logger;
+        _apiClient = apiClient;
     }
 
-    public override async IAsyncEnumerable<ListMessagesDataObject> GetTypedDataAsync(DataObjectCacheWriteArguments ? dataObjectRunArguments, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public override async IAsyncEnumerable<ListMessagesDataObject> GetTypedDataAsync(
+        DataObjectCacheWriteArguments? dataObjectRunArguments, 
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
+        if (dataObjectRunArguments == null)
+        {
+            throw new ArgumentException("DataObjectCacheWriteArguments is required");
+        }
+
+        if (!dataObjectRunArguments.TryGetParameterValue("thread_id", out string? threadId) || string.IsNullOrEmpty(threadId))
+        {
+            throw new ArgumentException("Thread ID is required");
+        }
+
         while (true)
         {
-            var response = new ApiResponse<PaginatedResponse<ListMessagesDataObject>>();
-            // If the ListMessagesDataObject does not have the same structure as the ListMessages response from the API, create a new class for it and replace ListMessagesDataObject with it.
-            // Example:
-            // var response = new ApiResponse<IEnumerable<ListMessagesResponse>>();
-
-            // Make a call to your API/system to retrieve the objects/type for the connector's configuration.
+            ApiResponse<ListMessagesDataObject>? response = null;
             try
             {
-                //response = await _apiClient.GetRecords<ListMessagesDataObject>(
-                //    relativeUrl: "listMessages",
-                //    page: _currentPage,
-                //    cancellationToken: cancellationToken)
-                //    .ConfigureAwait(false);
+                response = await _apiClient.ListMessages(
+                    threadId: threadId,
+                    after: _lastId,
+                    cancellationToken: cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (!response.IsSuccessful || response.Data == null)
+                {
+                    throw new HttpRequestException($"Failed to retrieve messages. Status code: {response.StatusCode}");
+                }
             }
-            catch (HttpRequestException exception)
+            catch (Exception ex)
             {
-                _logger.LogError(exception, "Exception while making a read request to data object 'ListMessagesDataObject'");
+                _logger.LogError(ex, "Error retrieving messages");
                 throw;
             }
 
-            if (!response.IsSuccessful)
+            if (!response.Data.HasMore)
             {
-                throw new Exception($"Failed to retrieve records for 'ListMessagesDataObject'. API StatusCode: {response.StatusCode}");
-            }
-
-            if (response.Data == null || !response.Data.Items.Any()) break;
-
-            // Return the data objects to Cache.
-            foreach (var item in response.Data.Items)
-            {
-                // If new class was created to match the API response, create a new ListMessagesDataObject object, map the properties and return a ListMessagesDataObject.
-
-                // Example:
-                //var resource = new ListMessagesDataObject
-                //{
-                //// TODO: Map properties.      
-                //};
-                //yield return resource;
-                yield return item;
-            }
-
-            // Handle pagination per API client design
-            _currentPage++;
-            if (_currentPage >= response.Data.TotalPages)
-            {
+                yield return response.Data;
                 break;
             }
+
+            yield return response.Data;
+            _lastId = response.Data.LastId;
         }
     }
 }

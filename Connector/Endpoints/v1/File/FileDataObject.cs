@@ -6,19 +6,52 @@ using System.Text.Json.Serialization;
 using Xchange.Connector.SDK.CacheWriter;
 
 /// <summary>
-/// Data object that will represent an object in the Xchange system. This will be converted to a JsonSchema, 
-/// so add attributes to the properties to provide any descriptions, titles, ranges, max, min, etc... 
-/// These types will be used for validation at runtime to make sure the objects being passed through the system 
-/// are properly formed. The schema also helps provide integrators more information for what the values 
-/// are intended to be.
+/// Represents a file object from OpenAI's API
 /// </summary>
 [PrimaryKey("id", nameof(Id))]
 //[AlternateKey("alt-key-id", nameof(CompanyId), nameof(EquipmentNumber))]
-[Description("Example description of the object.")]
+[Description("Represents a file object from OpenAI's API")]
 public class FileDataObject
 {
     [JsonPropertyName("id")]
-    [Description("Example primary key of the object")]
+    [Description("The file identifier, which can be referenced in the API endpoints")]
     [Required]
-    public required Guid Id { get; init; }
+    public required string Id { get; init; }
+
+    [JsonPropertyName("object")]
+    [Description("The object type, which is always 'file'")]
+    [Required]
+    public required string Object { get; init; }
+
+    [JsonPropertyName("bytes")]
+    [Description("The size of the file, in bytes")]
+    [Required]
+    public required int Bytes { get; init; }
+
+    [JsonPropertyName("created_at")]
+    [Description("The Unix timestamp (in seconds) for when the file was created")]
+    [Required]
+    public required long CreatedAt { get; init; }
+
+    [JsonPropertyName("expires_at")]
+    [Description("The Unix timestamp (in seconds) for when the file will expire")]
+    public long? ExpiresAt { get; init; }
+
+    [JsonPropertyName("filename")]
+    [Description("The name of the file")]
+    [Required]
+    public required string Filename { get; init; }
+
+    [JsonPropertyName("purpose")]
+    [Description("The intended purpose of the file")]
+    [Required]
+    public required string Purpose { get; init; }
+
+    [JsonPropertyName("status")]
+    [Description("The current status of the file (deprecated)")]
+    public string? Status { get; init; }
+
+    [JsonPropertyName("status_details")]
+    [Description("Details on why a fine-tuning training file failed validation (deprecated)")]
+    public string? StatusDetails { get; init; }
 }

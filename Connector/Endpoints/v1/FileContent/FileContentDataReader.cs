@@ -1,4 +1,5 @@
 using Connector.Client;
+using Connector.Extensions;
 using System;
 using ESR.Hosting.CacheWriter;
 using Microsoft.Extensions.Logging;
@@ -14,65 +15,73 @@ namespace Connector.Endpoints.v1.FileContent;
 public class FileContentDataReader : TypedAsyncDataReaderBase<FileContentDataObject>
 {
     private readonly ILogger<FileContentDataReader> _logger;
-    private int _currentPage = 0;
+    private readonly ApiClient _apiClient;
+    private string? _lastId;
 
     public FileContentDataReader(
-        ILogger<FileContentDataReader> logger)
+        ILogger<FileContentDataReader> logger,
+        ApiClient apiClient)
     {
         _logger = logger;
+        _apiClient = apiClient;
     }
 
-    public override async IAsyncEnumerable<FileContentDataObject> GetTypedDataAsync(DataObjectCacheWriteArguments ? dataObjectRunArguments, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public override async IAsyncEnumerable<FileContentDataObject> GetTypedDataAsync(
+        DataObjectCacheWriteArguments? dataObjectRunArguments,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        while (true)
+        if (dataObjectRunArguments == null)
         {
-            var response = new ApiResponse<PaginatedResponse<FileContentDataObject>>();
-            // If the FileContentDataObject does not have the same structure as the FileContent response from the API, create a new class for it and replace FileContentDataObject with it.
-            // Example:
-            // var response = new ApiResponse<IEnumerable<FileContentResponse>>();
+            _logger.LogError("DataObjectRunArguments is null");
+            yield break;
+        }
 
-            // Make a call to your API/system to retrieve the objects/type for the connector's configuration.
-            try
+        string? fileId = null;
+        try
+        {
+            fileId = dataObjectRunArguments.TryGetParameterValue<string>("file_id", out var id) ? id : null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting file ID from arguments");
+            yield break;
+        }
+
+        if (string.IsNullOrEmpty(fileId))
+        {
+            _logger.LogError("File ID is null or empty");
+            yield break;
+        }
+
+        FileContentDataObject? result = null;
+        try
+        {
+            var response = await _apiClient.GetFileContent(fileId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!response.IsSuccessful || response.Data == null)
             {
-                //response = await _apiClient.GetRecords<FileContentDataObject>(
-                //    relativeUrl: "fileContents",
-                //    page: _currentPage,
-                //    cancellationToken: cancellationToken)
-                //    .ConfigureAwait(false);
-            }
-            catch (HttpRequestException exception)
-            {
-                _logger.LogError(exception, "Exception while making a read request to data object 'FileContentDataObject'");
-                throw;
-            }
-
-            if (!response.IsSuccessful)
-            {
-                throw new Exception($"Failed to retrieve records for 'FileContentDataObject'. API StatusCode: {response.StatusCode}");
-            }
-
-            if (response.Data == null || !response.Data.Items.Any()) break;
-
-            // Return the data objects to Cache.
-            foreach (var item in response.Data.Items)
-            {
-                // If new class was created to match the API response, create a new FileContentDataObject object, map the properties and return a FileContentDataObject.
-
-                // Example:
-                //var resource = new FileContentDataObject
-                //{
-                //// TODO: Map properties.      
-                //};
-                //yield return resource;
-                yield return item;
+                _logger.LogError("Failed to get file content. Status code: {StatusCode}", response.StatusCode);
+                yield break;
             }
 
-            // Handle pagination per API client design
-            _currentPage++;
-            if (_currentPage >= response.Data.TotalPages)
+            result = new FileContentDataObject
             {
-                break;
-            }
+                Id = fileId,
+                Content = response.Data,
+                FileId = fileId,
+                CreatedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving file content");
+            yield break;
+        }
+
+        if (result != null)
+        {
+            yield return result;
         }
     }
 }

@@ -1,4 +1,5 @@
 using Connector.Client;
+using Connector.Extensions;
 using System;
 using ESR.Hosting.CacheWriter;
 using Microsoft.Extensions.Logging;
@@ -14,65 +15,50 @@ namespace Connector.Endpoints.v1.Upload;
 public class UploadDataReader : TypedAsyncDataReaderBase<UploadDataObject>
 {
     private readonly ILogger<UploadDataReader> _logger;
+    private readonly ApiClient _apiClient;
     private int _currentPage = 0;
 
     public UploadDataReader(
-        ILogger<UploadDataReader> logger)
+        ILogger<UploadDataReader> logger,
+        ApiClient apiClient)
     {
         _logger = logger;
+        _apiClient = apiClient;
     }
 
-    public override async IAsyncEnumerable<UploadDataObject> GetTypedDataAsync(DataObjectCacheWriteArguments ? dataObjectRunArguments, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public override async IAsyncEnumerable<UploadDataObject> GetTypedDataAsync(
+        DataObjectCacheWriteArguments? dataObjectRunArguments, 
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        while (true)
+        UploadDataObject? upload = null;
+        try
         {
-            var response = new ApiResponse<PaginatedResponse<UploadDataObject>>();
-            // If the UploadDataObject does not have the same structure as the Upload response from the API, create a new class for it and replace UploadDataObject with it.
-            // Example:
-            // var response = new ApiResponse<IEnumerable<UploadResponse>>();
-
-            // Make a call to your API/system to retrieve the objects/type for the connector's configuration.
-            try
+            if (dataObjectRunArguments == null || !dataObjectRunArguments.TryGetParameterValue("id", out string? uploadId) || string.IsNullOrEmpty(uploadId))
             {
-                //response = await _apiClient.GetRecords<UploadDataObject>(
-                //    relativeUrl: "uploads",
-                //    page: _currentPage,
-                //    cancellationToken: cancellationToken)
-                //    .ConfigureAwait(false);
-            }
-            catch (HttpRequestException exception)
-            {
-                _logger.LogError(exception, "Exception while making a read request to data object 'UploadDataObject'");
-                throw;
+                _logger.LogError("No upload ID provided");
+                yield break;
             }
 
-            if (!response.IsSuccessful)
+            var response = await _apiClient.GetUpload(uploadId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!response.IsSuccessful || response.Data == null)
             {
-                throw new Exception($"Failed to retrieve records for 'UploadDataObject'. API StatusCode: {response.StatusCode}");
+                _logger.LogError("Failed to retrieve upload. Status code: {StatusCode}", response.StatusCode);
+                yield break;
             }
 
-            if (response.Data == null || !response.Data.Items.Any()) break;
+            upload = response.Data;
+        }
+        catch (HttpRequestException exception)
+        {
+            _logger.LogError(exception, "Exception while making a read request to data object 'UploadDataObject'");
+            throw;
+        }
 
-            // Return the data objects to Cache.
-            foreach (var item in response.Data.Items)
-            {
-                // If new class was created to match the API response, create a new UploadDataObject object, map the properties and return a UploadDataObject.
-
-                // Example:
-                //var resource = new UploadDataObject
-                //{
-                //// TODO: Map properties.      
-                //};
-                //yield return resource;
-                yield return item;
-            }
-
-            // Handle pagination per API client design
-            _currentPage++;
-            if (_currentPage >= response.Data.TotalPages)
-            {
-                break;
-            }
+        if (upload != null)
+        {
+            yield return upload;
         }
     }
 }
